@@ -34,3 +34,4 @@ for Round in range(1,RoundLimit+1):
         # (What to do in turn)
 
 os.system("pause") # Doesn't close out until clicked
+os.system("exit")
