@@ -34,7 +34,7 @@ class Nation:  # To initialize, type: x = Nation()
         self.NationName = name
         self.LeaderName = leader
     def resourcecompute(self):
-        self.Resources += int(Round(BR + self.Production + self.Technology*TEM + self.Trade*TRM - self.Resources**RDE*RDC - self.Overspent*OPM), 0)
+        self.Resources += int(round(BR + self.Production + self.Technology*TEM + self.Trade*TRM - self.Resources**RDE*RDC - self.Overspent*OPM, 0))
     def resourceprint(self):
         pass # Osmotischen will work on this later.
 
