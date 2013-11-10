@@ -12,14 +12,8 @@ NationQuantity = input("How many will be playing?: ")
 RoundLimit = input("The maximum number of rounds?: ")
 
 # Load settings from Settings.txt
-with open("Settings.txt", "r") as namefile:
-    Settings = [name.strip() for name in namefile.readlines()]
-BR = float(Settings[0].split("<>")[0])
-TEM = float(Settings[1].split("<>")[0])
-TRM = float(Settings[2].split("<>")[0])
-RDE = float(Settings[3].split("<>")[0])
-RDC = float(Settings[4].split("<>")[0])
-OPM = float(Settings[5].split("<>")[0])
+execfile('settings.py')
+
 if DebugVar:
     print("BR = "+str(BR)+", TEM = "+str(TEM)+", TRM = "+str(TRM)+", RDE = "+str(RDE)+", RDC = "+str(RDC)+", OPM = "+str(OPM))
 
