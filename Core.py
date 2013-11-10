@@ -26,7 +26,7 @@ class Nation:  #to initialize, type: x = Nation()
 Round = int
 Turn = int
 SleepTime = float
-DebugVar = input("Debug mode? (1 = yes, otherwise no): ")
+DebugVar = input("Debug mode? (1 = yes, 0 = no): ")
 NationQuantity = input("How many will be playing?: ")
 RoundLimit = input("The maximum number of rounds?: ")
 
