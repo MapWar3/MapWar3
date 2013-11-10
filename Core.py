@@ -106,7 +106,7 @@ print(NationArray[0].LeaderName+StartedSynonyms[random.randint(0,len(StartedSyno
 for Round in range(1,RoundLimit+1):
     for Turn in range(1,NationQuantity+1):
         if (Round == 1) and (Turn > 1):
-            print(NationArray[Turn-1].LeaderName+StartedSynonyms[random.randint(0,len(StartedSynonyms)-1)] +NationArray[Turn-1].NationName+".")
+            print(NationArray[Turn-1].LeaderName+random.choice(StartedSynonyms)+NationArray[Turn-1].NationName+".")
 
         # Calculate and display resources for nation
         NationArray[Turn-1].resourcecompute()
