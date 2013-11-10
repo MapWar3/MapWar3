@@ -4,10 +4,11 @@ q=NationQuantity*2
 while NationQuantity < q:
 	{
 		NationArray[q-1].NationName = raw_input('Type the name of your nation: ')
-		NationArray[q-1].LeaderName = raw_input("What is your name, mighty leader of "+NationArray[0].NationName+"?: ")
+		NationArray[q-1].LeaderName = raw_input("What is your name, mighty leader of "+NationArray[q-1].NationName+"?: ")
 		q--
 	}
 #doesn't work
+#says invaid syntax and points at equal sign^ like that 
 
 #changed from 
 NationArray[0].NationName = raw_input('Type the name of your nation: ')
@@ -15,6 +16,7 @@ NationArray[0].LeaderName = raw_input("What is your name, mighty leader of "+Nat
 #want to make it do multiply nations
 #works when i do 
 NationArray[1].NationName = raw_input('Type the name of your nation: ')
-NationArray[1].LeaderName = raw_input("What is your name, mighty leader of "+NationArray[0].NationName+"?: ")
+NationArray[1].LeaderName = raw_input("What is your name, mighty leader of "+NationArray[1].NationName+"?: ")
+
 
 		
