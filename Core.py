@@ -3,11 +3,8 @@ import os
 
 # Nation class
 class Nation:
-    """A simple example class"""
     Resources = 0
     NationName = str
-    def f(self):
-        return 'hello world'
 
 # Initial settings
 Round = int
