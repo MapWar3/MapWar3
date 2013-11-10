@@ -1,0 +1,10 @@
+5.0<> BR - Base resources pr. turn
+0.1<> TEM - Tech multiplier
+0.1<> TRM - Trade multiplier
+2.0<> RDE - Resource decay exponential factor
+0.001<> RDC - Resource decay constant factor
+2.0<> OPM - Overspending penalty multiplier
+----------
+Make sure to write numbers and no spaces before the <> on each line.
+Anything on a line after and including <> is ignored by the game.
+Anything below the 10 dashes is also ignored.
