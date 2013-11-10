@@ -21,3 +21,5 @@ NationArray[1].LeaderName = raw_input("What is your name, mighty leader of "+Nat
 
 		
 # I don't think the program should prompt users to name all the nations, instead we should work on making the program assign random names to the other nations from txt files. - Bla
+# Ok. Damn saving as and reading txt files is really easy but now we have to do that from github... regular computer directories.
+
