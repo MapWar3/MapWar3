@@ -11,12 +11,17 @@ DebugVar = input("Debug mode? (1 = yes, 0 = no): ")
 NationQuantity = input("How many will be playing?: ")
 RoundLimit = input("The maximum number of rounds?: ")
 
-BR = 5.0 # Base resources pr. turn
-TEM = 0.1 # Tech multiplier
-TRM = 0.1 # Trade multiplier
-RDE = 2.0 # Resource decay exponential factor
-RDC = 0.001 # Resource decay constant factor
-OPM = 2.0 # Overspending penalty multiplier
+# Load settings from Settings.txt
+with open("Settings.txt", "r") as namefile:
+    Settings = [name.strip() for name in namefile.readlines()]
+BR = float(Settings[0].split("<>")[0])
+TEM = float(Settings[1].split("<>")[0])
+TRM = float(Settings[2].split("<>")[0])
+RDE = float(Settings[3].split("<>")[0])
+RDC = float(Settings[4].split("<>")[0])
+OPM = float(Settings[5].split("<>")[0])
+if DebugVar:
+    print("BR = "+str(BR)+", TEM = "+str(TEM)+", TRM = "+str(TRM)+", RDE = "+str(RDE)+", RDC = "+str(RDC)+", OPM = "+str(OPM))
 
 # Nation class
 class Nation:  # To initialize, type: x = Nation()
@@ -29,7 +34,7 @@ class Nation:  # To initialize, type: x = Nation()
         self.NationName = name
         self.LeaderName = leader
     def resourcecompute(self):
-        self.Resources += int(BR + self.Production + self.Technology*TEM + self.Trade*TRM - self.Resources**RDE*RDC - self.Overspent*OPM)
+        self.Resources += int(Round(BR + self.Production + self.Technology*TEM + self.Trade*TRM - self.Resources**RDE*RDC - self.Overspent*OPM), 0)
     def resourceprint(self):
         pass # Osmotischen will work on this later.
 
