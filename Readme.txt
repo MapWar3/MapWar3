@@ -7,4 +7,4 @@ What is to be done?
 - Interface
 - Read random nation names/leaders from txt files
 - Division into single player and multi player
-- Technology
+- Pick technology rates (5% to 25%) every 5 turns, input for player, random for AIs
