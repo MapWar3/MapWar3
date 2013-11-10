@@ -1,3 +1,5 @@
+#Must have NationNames.txt and LeaderNames.txt in the same directory as this program to run
+
 # Imports
 import os
 import random
