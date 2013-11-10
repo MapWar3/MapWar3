@@ -1,6 +1,3 @@
-MapWar3
-=======
-
 Map War 3
 
-Kolkolkol
+To start the program, run Core.py.
