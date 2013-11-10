@@ -1,0 +1,20 @@
+#ok i tried to code when bla takened it
+
+q=NationQuantity*2
+while NationQuantity < q:
+	{
+		NationArray[q-1].NationName = raw_input('Type the name of your nation: ')
+		NationArray[q-1].LeaderName = raw_input("What is your name, mighty leader of "+NationArray[0].NationName+"?: ")
+		q--
+	}
+#doesn't work
+
+#changed from 
+NationArray[0].NationName = raw_input('Type the name of your nation: ')
+NationArray[0].LeaderName = raw_input("What is your name, mighty leader of "+NationArray[0].NationName+"?: ")
+#want to make it do multiply nations
+#works when i do 
+NationArray[1].NationName = raw_input('Type the name of your nation: ')
+NationArray[1].LeaderName = raw_input("What is your name, mighty leader of "+NationArray[0].NationName+"?: ")
+
+		
