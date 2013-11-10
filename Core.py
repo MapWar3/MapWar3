@@ -8,8 +8,11 @@ Round = int
 Turn = int
 SleepTime = float
 DebugVar = input("Debug mode? (1 = yes, 0 = no): ")
-NationQuantity = input("How many will be playing?: ")
-RoundLimit = input("The maximum number of rounds?: ")
+if DebugVar: #aint nobody got time for typing in numbers
+    NationQuantity, RoundLimit = 5,5
+else:
+    NationQuantity = input("How many will be playing?: ")
+    RoundLimit = input("The maximum number of rounds?: ")
 
 # Load settings from Settings.txt
 execfile('settings.py')
@@ -57,8 +60,12 @@ for i in range(0,NationQuantity):
     NationArray.append(Nation())
 
 # Get nation and leader name from keyboard input
-NationArray[0].NationName = raw_input('What is the name of your potential global future utopia?: ')
-NationArray[0].LeaderName = raw_input("What is your name, mighty leader of "+NationArray[0].NationName+"?: ")
+if DebugVar:
+    NationArray[0].NationName = 'testnation'
+    NationArray[0].LeaderName = 'testleader'
+else:
+    NationArray[0].NationName = raw_input('What is the name of your potential global future utopia?: ')
+    NationArray[0].LeaderName = raw_input("What is your name, mighty leader of "+NationArray[0].NationName+"?: ")
 
 # Set random AI nation and leader names
 for i in range(1,NationQuantity): #using random.choice(list)
