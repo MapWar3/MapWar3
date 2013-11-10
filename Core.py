@@ -2,8 +2,8 @@
 import os
 
 # Initial settings
-NationQuantity = 3
-RoundLimit = 5
+NationQuantity = raw_imput("How many will be playing?")
+RoundLimit = raw_imput("The maximum number of rounds?")
 Round = int
 Turn = int
 
