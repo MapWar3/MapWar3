@@ -1,10 +1,13 @@
 # Imports
 import os
+import time
 
 # Nation class
 class Nation:
     Resources = 0
+    Production = 0
     NationName = str
+    LeaderName = str
 
 # Initial settings
 Round = int
@@ -16,22 +19,23 @@ RoundLimit = input("The maximum number of rounds?: ")
 NationArray = []
 for Turn in range(0,NationQuantity):
     NationArray.append(Nation())
-    NationArray[Turn].Resources = 5
-    print("Nation "+str(Turn)+" resources set to "+str(NationArray[Turn].Resources)) # Debug
-print(NationArray) # Debug
 
 # Get nation and leader name from keyboard input
-NationName = raw_input('Type the name of your nation: ')
-LeaderName = raw_input("What is your name, mighty leader of "+NationName+"?: ")
+NationArray[0].NationName = raw_input('Type the name of your nation: ')
+NationArray[0].LeaderName = raw_input("What is your name, mighty leader of "+NationArray[0].NationName+"?: ")
 
 # Display leader and nation name
-print(" NationName = "+NationName+" LeaderName = "+LeaderName)
+print(" NationName = "+NationArray[0].NationName+" LeaderName = "+NationArray[0].LeaderName)
 
 # Rounds and turns loops
 for Round in range(1,RoundLimit+1):
     for Turn in range(1,NationQuantity+1):
-        print("Round "+str(Round)+", Turn "+str(Turn))
-        # (What to do in turn)
+
+        # Calculate and display resources for nation
+        NationArray[Turn-1].Resources = 5+NationArray[Turn-1].Production+NationArray[Turn-1].Resources
+        print("R"+str(Round)+"T"+str(Turn)+": "+str(NationArray[Turn-1].NationName)+" may spend "+str(NationArray[Turn-1].Resources)+" resources.")
+
+        # End of turn, pause for 1 second
+        time.sleep(1)
 
 os.system("pause") # Doesn't close out until clicked
-os.system("exit")
