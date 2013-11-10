@@ -1,6 +1,7 @@
 Map War 3
 
 To start the program, run Core.py. The program is currently in development.
+The program requires NationNames.txt and LeaderNames.txt in the same directory as Core.py to run.
 
 What is to be done?
 - Map
