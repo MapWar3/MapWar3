@@ -1,3 +1,9 @@
+#################
+#file deprecated#
+#################
+
+
+
 # Imports and initial stuff
 import os
 import random
