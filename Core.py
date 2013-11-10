@@ -1,11 +1,27 @@
 # Imports
 import os
 
+# Nation class
+class Nation:
+    """A simple example class"""
+    Resources = 0
+    NationName = str
+    def f(self):
+        return 'hello world'
+
 # Initial settings
-NationQuantity = input("How many will be playing?: ")
-RoundLimit = input("The maximum number of rounds?: ")
 Round = int
 Turn = int
+NationQuantity = input("How many will be playing?: ")
+RoundLimit = input("The maximum number of rounds?: ")
+
+# Create array of nations based on keyboard input
+NationArray = []
+for Turn in range(0,NationQuantity):
+    NationArray.append(Nation())
+    NationArray[Turn].Resources = 5
+    print("Nation "+str(Turn)+" resources set to "+str(NationArray[Turn].Resources)) # Debug
+print(NationArray) # Debug
 
 # Get nation and leader name from keyboard input
 NationName = raw_input('Type the name of your nation: ')
