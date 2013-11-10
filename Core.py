@@ -33,7 +33,7 @@ text_file = open("LeaderNames.txt", "r")
 LeaderNameDatabase = text_file.read().split("\n")
 text_file.close()
 print LeaderNameDatabase
-LeaderNameQuantity = len(NationNameDatabase)
+LeaderNameQuantity = len(LeaderNameDatabase)
 
 # Create array of nations based on keyboard input
 NationArray = []
