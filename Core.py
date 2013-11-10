@@ -100,7 +100,7 @@ elif NationQuantity > LeaderNameQuantity:
 # Word Bank
 StartedSynonyms = [" established ", " started ", " founded ", " created ", " formed ", " chose ", " got ", " initiated ", " commenced ", " organized ", " developed ", " set up "]
 # Display leader and nation name
-print(StartedSynonyms[random.randint(0,len(StartedSynonyms)-1)]+NationArray[0].NationName+".")
+print(NationArray[0].LeaderName+StartedSynonyms[random.randint(0,len(StartedSynonyms)-1)]+NationArray[0].NationName+".")
 
 # Rounds and turns loops
 for Round in range(1,RoundLimit+1):
