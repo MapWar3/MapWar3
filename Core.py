@@ -1,5 +1,6 @@
 # Imports
 import os
+import random
 import time
 
 # Nation class
@@ -18,6 +19,20 @@ Turn = int
 NationQuantity = input("How many will be playing?: ")
 RoundLimit = input("The maximum number of rounds?: ")
 
+# Load nationnames from NationNames.txt
+text_file = open("NationNames.txt", "r")
+NationNameDatabase = text_file.read().split("\n")
+text_file.close()
+print NationNameDatabase
+NationNameQuantity = len(NationNameDatabase)
+
+# Load leadernames from LeaderNames.txt
+text_file = open("LeaderNames.txt", "r")
+LeaderNameDatabase = text_file.read().split("\n")
+text_file.close()
+print LeaderNameDatabase
+LeaderNameQuantity = len(NationNameDatabase)
+
 # Create array of nations based on keyboard input
 NationArray = []
 for Turn in range(0,NationQuantity):
@@ -26,6 +41,12 @@ for Turn in range(0,NationQuantity):
 # Get nation and leader name from keyboard input
 NationArray[0].NationName = raw_input('Type the name of your nation: ')
 NationArray[0].LeaderName = raw_input("What is your name, mighty leader of "+NationArray[0].NationName+"?: ")
+
+# Set random AI nation and leader names
+random.seed()
+for Turn in range(1,NationQuantity):
+    NationArray[Turn].NationName = NationNameDatabase[random.randint(0,NationNameQuantity-1)]
+    NationArray[Turn].LeaderName = LeaderNameDatabase[random.randint(0,LeaderNameQuantity-1)]
 
 # Display leader and nation name
 print(" NationName = "+NationArray[0].NationName+" LeaderName = "+NationArray[0].LeaderName)
