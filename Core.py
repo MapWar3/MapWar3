@@ -3,25 +3,6 @@ import os
 import random
 import time
 
-# Nation class
-class Nation:  #to initialize, type: x = Nation()
-    TTM = 0.1 #tech trade multiplier
-    DE = 2.0 #decay exponential factor
-    DC = 0.001 #decay constant factor
-    OP = 2.0 #overpsending penalty
-    def __init__(self, production=0, technology=0, trade=0, resources=0, overspent=0, name='', leader=''):
-        self.Production = production #now you can say something like Bob.production
-        self.Technology = technology
-        self.Trade = trade
-        self.Resources = resources
-        self.Overspent = overspent
-        self.NationName = name
-        self.LeaderName = leader
-    def resourcecompute(self):
-        self.Resources += int(5+self.Production + (self.Technology+self.Trade)*Nation.TTM - self.Resources**Nation.DE*Nation.DC-self.Overspent*Nation.OP)
-    def resourceprint(self):
-        pass #will work on this later.
-        
 # Initial settings
 Round = int
 Turn = int
@@ -30,29 +11,50 @@ DebugVar = input("Debug mode? (1 = yes, 0 = no): ")
 NationQuantity = input("How many will be playing?: ")
 RoundLimit = input("The maximum number of rounds?: ")
 
-# Sets wait time after turn based on debug mode on/off
-if DebugVar: #1 is boolean true, so if DebugVar==1: is the same as if DebugVar:
-    SleepTime = 0.1
+BR = 5.0 # Base resources pr. turn
+TEM = 0.1 # Tech multiplier
+TRM = 0.1 # Trade multiplier
+RDE = 2.0 # Resource decay exponential factor
+RDC = 0.001 # Resource decay constant factor
+OPM = 2.0 # Overspending penalty multiplier
+
+# Nation class
+class Nation:  # To initialize, type: x = Nation()
+    def __init__(self, production=0, technology=0, trade=0, resources=0, overspent=0, name='', leader=''):
+        self.Production = production # Now you can say something like Bob.production
+        self.Technology = technology
+        self.Trade = trade
+        self.Resources = resources
+        self.Overspent = overspent
+        self.NationName = name
+        self.LeaderName = leader
+    def resourcecompute(self):
+        self.Resources += int(BR + self.Production + self.Technology*TEM + self.Trade*TRM - self.Resources**RDE*RDC - self.Overspent*OPM)
+    def resourceprint(self):
+        pass # Osmotischen will work on this later.
+
+if DebugVar: # Sets wait time after turn based on debug mode on/off
+    SleepTime = 0
 else:
     SleepTime = 1
 
 # Load nationnames from NationNames.txt
-with open("NationNames.txt", "r") as namefile: #this closes the file after indented block
-    NationNameDatabase = [name.strip() for name in namefile.readlines()]
+with open("NationNames.txt", "r") as namefile: # This closes the file after indented block
+    NationNameDatabase = [name.strip() for name in namefile.readlines()] # List of every line in file with \n removed
 NationNameQuantity = len(NationNameDatabase)
 
 # Load leadernames from LeaderNames.txt
 with open("LeaderNames.txt", "r")as namefile:
-    LeaderNameDatabase = [name.strip() for name in namefile.readlines()] #list of every line in file with \n removed
+    LeaderNameDatabase = [name.strip() for name in namefile.readlines()]
 LeaderNameQuantity = len(LeaderNameDatabase)
 
 if DebugVar: # Show loaded nation and leader names if debug mode is on.
     print NationNameDatabase
     print LeaderNameDatabase
 
-# Create array of nations based on keyboard input
+# Create list of nations based on entered number of nations
 NationArray = []
-for Turn in range(0,NationQuantity):
+for i in range(0,NationQuantity):
     NationArray.append(Nation())
 
 # Get nation and leader name from keyboard input
@@ -60,9 +62,34 @@ NationArray[0].NationName = raw_input('What is the name of your potential global
 NationArray[0].LeaderName = raw_input("What is your name, mighty leader of "+NationArray[0].NationName+"?: ")
 
 # Set random AI nation and leader names
-for Turn in range(1,NationQuantity): #using random.choice(list)
-    NationArray[Turn].NationName = random.choice(NationNameDatabase)
-    NationArray[Turn].LeaderName = random.choice(LeaderNameDatabase)
+for i in range(1,NationQuantity): #using random.choice(list)
+    NationArray[i].NationName = random.choice(NationNameDatabase)
+    NationArray[i].LeaderName = random.choice(LeaderNameDatabase)
+
+    # Checks for nation name duplicates and tries to avoid them
+    if NationQuantity <= NationNameQuantity:
+        for k in range(0,NationQuantity):
+            if (i != k) and (NationArray[i].NationName == NationArray[k].NationName):
+                NationArray[i].NationName = random.choice(NationNameDatabase)
+                if DebugVar:
+                    print("Nation name of "+NationArray[i].NationName+" was changed.")
+    
+    # Checks for leadername duplicates and tries to avoid them
+    if NationQuantity < LeaderNameQuantity:
+        for k in range(0,NationQuantity):
+            if (i != k) and (NationArray[i].LeaderName == NationArray[k].LeaderName):
+                NationArray[i].LeaderName = random.choice(LeaderNameDatabase)
+                if DebugVar:
+                    print("Leader name of "+NationArray[i].LeaderName+" was changed.")
+
+# Suggest adding more names to files if there are too few names for their game
+if NationQuantity > NationNameQuantity:
+    if NationQuantity > LeaderNameQuantity:
+        print("You play with more nations than there are names for in the LeaderNames.txt and NationNames.txt files. Consider adding more names to them. :)")
+    else:
+        print("You play with more nations than there are names for in the NationNames.txt file. Consider adding more names to it. :)")
+elif NationQuantity > LeaderNameQuantity:
+    print("You play with more nations than there are names for in the LeaderNames.txt file. Consider adding more names to it. :)")
 
 # Display leader and nation name
 print("You established "+NationArray[0].NationName+".")
@@ -77,7 +104,7 @@ for Round in range(1,RoundLimit+1):
         NationArray[Turn-1].resourcecompute()
         print("R"+str(Round)+"T"+str(Turn)+": "+str(NationArray[Turn-1].NationName)+" may spend "+str(NationArray[Turn-1].Resources)+" resources.")
 
-        # End of turn, pause for 1 second
+        # End of turn, pause for the set sleeptime
         time.sleep(SleepTime)
 
-os.system("pause") # Doesn't close out until clicked
+os.system("pause") # Prevents program from closing automatically
