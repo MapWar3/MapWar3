@@ -21,3 +21,4 @@ edit: i've done most of the restructuring as detailed above. i added an order.py
 ---
 
 Ok, good work, going to look at it now, but please, make sure to capitalize the file names properly another time.
+Well, I can hardly understand what has happened, other than it being split into many different files. If I run Initializer.py, the program doesn't run as before. As far as I can tell, the settings file is now ignored and the settings are stored in settings.py. If we need settings.py to load settings from Settings.txt, we can do that, but otherwise I think we should load the settings from Settings.txt - I'm not sure why my code got deleted when it worked fine as far as I can tell. - Bla
