@@ -29,10 +29,7 @@ class Nation:  # To initialize, type: x = Nation()
     def resourceprint(self):
         pass # Osmotischen will work on this later.
 
-if DebugVar: # Sets wait time after turn based on debug mode on/off
-    SleepTime = 0
-else:
-    SleepTime = 1
+
 
 # Load nationnames from NationNames.txt
 with open("NationNames.txt", "r") as namefile: # This closes the file after indented block
@@ -92,7 +89,6 @@ elif NationQuantity > LeaderNameQuantity:
     print("You play with more nations than there are names for in the LeaderNames.txt file. Consider adding more names to it. :)")
 
 # Word Bank
-StartedSynonyms = [" established ", " started ", " founded ", " created ", " formed ", " chose ", " got ", " initiated ", " commenced ", " organized ", " developed ", " set up "]
 # Display leader and nation name
 print(NationArray[0].LeaderName+StartedSynonyms[random.randint(0,len(StartedSynonyms)-1)]+NationArray[0].NationName+".")
 
