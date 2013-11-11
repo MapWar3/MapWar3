@@ -18,4 +18,6 @@ to get from where we are to where we should be, let us rewrite the core.py file 
 
 edit: i've done most of the restructuring as detailed above. i added an order.py. where as processor processes a single turn, order.py will iterate through the rounds and turns and at each round, calls processor. if three is anything that happens once a round rather than once a turn, then there can be a turn_processor which runs every turn and a round_processor which runs every round.
 
+---
 
+Ok, good work, going to look at it now, but please, make sure to capitalize the file names properly another time.
