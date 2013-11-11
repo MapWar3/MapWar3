@@ -7,12 +7,12 @@ RDE = 2.0 #Resource decay exponential factor
 RDC = 0.001 #Resource decay constant factor
 OPM = 2.0 #Overspending penalty multiplier
 
-StartedSynonyms = [" established ", " started ", " founded ", " created ", " formed ", " chose ", " got ", " initiated ", " commenced ", " organized ", " developed ", " set up "]
+StartedSynonyms = [" established ", " founded ", " created "]
 
 if DebugVar:
     NationQuantity, RoundLimit = 5, 5
 else:
-    NationQuantity = input("How many will be playing?: ")
+    NationQuantity = input("How many nations will be playing?: ")
     RoundLimit = input("The maximum number of rounds?: ")
 
 if DebugVar: # Sets wait time after turn based on debug mode on/off
