@@ -4,12 +4,12 @@ import time
 import random
 
 execfile('NationClass.py') #load the class so we can use it
-execfile('processor.py') #load the processor file
-execfile('settings.py') #get round limit and stuff
+execfile('Processor.py') #load the processor file
+execfile('Settings.py') #get round limit and stuff
 
 execfile('Initializer.py') #init file
 
-with open('nationfile.dat', 'rb') as file: #load files
+with open('NationFile.dat', 'rb') as file: #load files
     NationArray = cPickle.load(file)
 
 for Round in range(1,RoundLimit+1):
