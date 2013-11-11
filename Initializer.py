@@ -7,12 +7,6 @@ import cPickle
 Round = int
 Turn = int
 SleepTime = float
-DebugVar = input("Debug mode? (1 = yes, 0 = no): ")
-if DebugVar: #aint nobody got time for typing in numbers
-    NationQuantity, RoundLimit = 5,5
-else:
-    NationQuantity = input("How many will be playing?: ")
-    RoundLimit = input("The maximum number of rounds?: ")
 
 # Load settings from Settings.txt
 execfile('settings.py')
