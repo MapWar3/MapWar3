@@ -1,7 +1,7 @@
 import random
 
 execfile('NationClass.py') #load the class so we can use it
-with open('nationfile.dat', 'rb') as file: #load files
+with open('NationFile.dat', 'rb') as file: #load files
     NationArray = cPickle.load(file)
 
 
@@ -13,6 +13,5 @@ def processturn(NationArray):
     # Calculate and display resources for nation
     NationArray[Turn-1].resourcecompute()
     print("R"+str(Round)+"T"+str(Turn)+": "+str(NationArray[Turn-1].NationName)+" may spend "+str(NationArray[Turn-1].Resources)+" resources.")
-
 
 #os.system("pause") # Prevents program from closing automatically
