@@ -9,7 +9,7 @@ Turn = int
 SleepTime = float
 
 # Load settings from Settings.txt
-execfile('settings.py')
+execfile('Settings.py')
 
 if DebugVar:
     print("BR = "+str(BR)+", TEM = "+str(TEM)+", TRM = "+str(TRM)+", RDE = "+str(RDE)+", RDC = "+str(RDC)+", OPM = "+str(OPM))
@@ -93,7 +93,7 @@ elif NationQuantity > LeaderNameQuantity:
 print(NationArray[0].LeaderName+StartedSynonyms[random.randint(0,len(StartedSynonyms)-1)]+NationArray[0].NationName+".")
 
 #save nations into a file
-with open('nationfile.dat', 'wb') as file:
+with open('NationFile.dat', 'wb') as file:
     cPickle.dump(NationArray,file)
 
 os.system('pause')
