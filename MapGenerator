@@ -1,0 +1,35 @@
+from PIL import Image
+import random
+import math
+ 
+def GenerateVoronoiCells(Width, Height, CellsNumber):
+    image = Image.new("RGB", (Width, Height))
+    putpixel = image.putpixel
+    imgx, imgy = image.size
+    xCoords = []
+    yCoords = []
+    RedValues = []
+    GreenValues = []
+    BlueValues = []
+    for i in range(CellsNumber):
+        xCoords.append(random.randrange(imgx))
+        yCoords.append(random.randrange(imgy))
+        print(str(xCoords[i])+","+str(yCoords[i]))
+        RedValues.append(random.randrange(256))
+        GreenValues.append(random.randrange(256))
+        BlueValues.append(random.randrange(256))
+    for y in range(imgy):
+        for x in range(imgx):
+            dmin = math.hypot(imgx-1, imgy-1)
+            j = -1
+            for i in range(CellsNumber):
+                d = math.hypot(xCoords[i]-x, yCoords[i]-y)
+                if d < dmin:
+                    dmin = d
+                    j = i
+            putpixel((x, y), (RedValues[j], GreenValues[j], BlueValues[j]))
+    image.save("VoronoiDiagram.png", "png")
+
+# Format: Width (pixels), height (pixels), number of cells.
+GenerateVoronoiCells(500, 500, 25)
+print("Image saved.")
