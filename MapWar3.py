@@ -50,10 +50,10 @@ while(screen_id == 0): # Initial screen
             # if mouse moved, add point to list 
 			#very messy hack to display coordinates at to left corner, fix later
 			#works by displaying the coordinates, then adding another intro picture, repeat, etc.
-			screen.blit(intro, (0,0))
-			mousepos = xyfont.render(str(pygame.mouse.get_pos()[0])+", "+str(pygame.mouse.get_pos()[1]), 0, (255,255,0))
-			screen.blit(mousepos, (0, 0))
-			print "Moved!"
+            screen.blit(intro, (0,0))
+            mousepos = xyfont.render(str(pygame.mouse.get_pos()[0])+", "+str(pygame.mouse.get_pos()[1]), 0, (255,255,0))
+            screen.blit(mousepos, (0, 0))
+            print "Moved!"
             
     #screen.fill((0, 0, 0)) # Black screen
     pygame.display.flip()
