@@ -14,6 +14,10 @@ clock = pygame.time.Clock()
 #Putting the initial screen up.
 screen.blit(intro, (0, 0))
 pygame.display.flip()
+
+#font used to display xy coordinates of mouse
+xyfont = pygame.font.SysFont("century", 20,20)
+
 while(screen_id == 0): # Initial screen
     pressed = pygame.key.get_pressed()
     #print "Test"
@@ -33,7 +37,7 @@ while(screen_id == 0): # Initial screen
                 print "g!"
             elif event.key == pygame.K_b:
                 print "b!"
-        
+				
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1: # Left mouse button
                 print "lmb!"
@@ -44,7 +48,12 @@ while(screen_id == 0): # Initial screen
         
         if event.type == pygame.MOUSEMOTION:
             # if mouse moved, add point to list 
-            print "Moved!"
+			#very messy hack to display coordinates at to left corner, fix later
+			#works by displaying the coordinates, then adding another intro picture, repeat, etc.
+			screen.blit(intro, (0,0))
+			mousepos = xyfont.render(str(pygame.mouse.get_pos()[0])+", "+str(pygame.mouse.get_pos()[1]), 0, (255,255,0))
+			screen.blit(mousepos, (0, 0))
+			print "Moved!"
             
     #screen.fill((0, 0, 0)) # Black screen
     pygame.display.flip()
