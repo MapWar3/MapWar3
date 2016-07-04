@@ -37,7 +37,7 @@ def button(msg,x,y,w,h,ic,ac,action=None): # Button function: Message, position 
         if mouseClick[0] ==  1 and action != None:
             print("button clicked, function, action!!!")
             if action == "startGame":
-                print("start the game!")
+                print("Action!!!")
                 return 1
             elif action == "quit":
                 pygame.quit()
@@ -54,12 +54,15 @@ screen.blit(intro, (0, 0))
 mousePos = pygame.mouse.get_pos() # (x,y) of cursor relative to top left of display
 pygame.display.flip()
 while(screen_id == 0): # Initial screen
-    if button("Start!",25,693,200,50,red,green,"startGame") == 1:
-        screen_id = 1
-        print screen_id
     pressed = pygame.key.get_pressed()
     mousePos = pygame.mouse.get_pos() # (x,y) of cursor relative to top left of display
     mouseClick = pygame.mouse.get_pressed() # (l,c,r), 0 or 1 for left, center or right mouse button clicked
+    if button("Start!",25,693,200,50,red,green,"startGame") == 1: # Start button
+        screen_id = 1
+        print screen_id
+    if button("Quit",250,693,200,50,red,green,"quit") == 1: # Quit button
+        pygame.quit()
+        quit()
     
     if (pygame.key.get_pressed()[pygame.K_t]):
         print "t!" # Print t if the user types t on keyboard. Test.
@@ -97,10 +100,19 @@ while(screen_id == 0): # Initial screen
     #screen.fill((0, 0, 0)) # Black screen
     pygame.display.flip()
     #pygame.display.update()
-    clock.tick(60) # Max 60 ticks per second
+    clock.tick(30) # Max ticks per second
 	
-intro2  = pygame.image.load("2ndscreen.png").convert() #
+intro2  = pygame.image.load("2ndscreen.png").convert()
 screen.blit(intro2, (0,0))
 pygame.display.flip()
-while (screen_id == 1):	
+while (screen_id == 1):
+    pressed = pygame.key.get_pressed()
+    mousePos = pygame.mouse.get_pos() # (x,y) of cursor relative to top left of display
+    mouseClick = pygame.mouse.get_pressed() # (l,c,r), 0 or 1 for left, center or right mouse button clicked
     print "test"
+    if button("Quit",250,693,200,50,red,green,"quit") == 1: # Quit button
+        pygame.quit()
+        quit()
+
+    pygame.display.flip()
+    clock.tick(30) # Max ticks per second
