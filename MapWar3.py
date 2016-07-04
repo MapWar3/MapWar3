@@ -38,6 +38,7 @@ def button(msg,x,y,w,h,ic,ac,action=None): # Button function: Message, position 
             print("button clicked, function, action!!!")
             if action == "startGame":
                 print("start the game!")
+                return 1
             elif action == "quit":
                 pygame.quit()
                 quit()
@@ -53,7 +54,9 @@ screen.blit(intro, (0, 0))
 mousePos = pygame.mouse.get_pos() # (x,y) of cursor relative to top left of display
 pygame.display.flip()
 while(screen_id == 0): # Initial screen
-    button("Start!",25,693,200,50,red,green,"startGame")
+    if button("Start!",25,693,200,50,red,green,"startGame") == 1:
+        screen_id = 1
+        print screen_id
     pressed = pygame.key.get_pressed()
     mousePos = pygame.mouse.get_pos() # (x,y) of cursor relative to top left of display
     mouseClick = pygame.mouse.get_pressed() # (l,c,r), 0 or 1 for left, center or right mouse button clicked
@@ -95,3 +98,9 @@ while(screen_id == 0): # Initial screen
     pygame.display.flip()
     #pygame.display.update()
     clock.tick(60) # Max 60 ticks per second
+	
+intro2  = pygame.image.load("2ndscreen.png").convert() #
+screen.blit(intro2, (0,0))
+pygame.display.flip()
+while (screen_id == 1):	
+    print "test"
