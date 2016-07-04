@@ -10,6 +10,7 @@ screen = pygame.display.get_surface() # Setting up the screen
 screen_id = 0 # Enables us to have an intro screen.
 intro = pygame.image.load("menuPic.png").convert() # Intro screen image.
 clock = pygame.time.Clock()
+tpsMax = 30 # Max tps
 
 # Color definitions
 black = (0,0,0)
@@ -100,7 +101,7 @@ while(screen_id == 0): # Initial screen
     #screen.fill((0, 0, 0)) # Black screen
     pygame.display.flip()
     #pygame.display.update()
-    clock.tick(30) # Max ticks per second
+    clock.tick(tpsMax) # Max ticks per second
 	
 intro2  = pygame.image.load("2ndscreen.png").convert()
 screen.blit(intro2, (0,0))
@@ -114,5 +115,8 @@ while (screen_id == 1):
         pygame.quit()
         quit()
 
+    for event in pygame.event.get(): # Keyboard/mouse event queue
+        pass # This loop is apparently necessary to make the quit button work.
+        
     pygame.display.flip()
-    clock.tick(30) # Max ticks per second
+    clock.tick(tpsMax) # Max ticks per second
