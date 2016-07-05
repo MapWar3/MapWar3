@@ -49,6 +49,7 @@ class player:
         self.trade = 0
         self.overspent = 0
         self.color = (0,255,255)
+        self.dead = False
 
 def textObjects(text, font, color): # Text object function for e.g. button text
     textSurface = font.render(text, True, color)
@@ -272,28 +273,33 @@ while (screen_id == 2):
     screen.blit(statsTextSurf, statsTextRect) # Render round info text
     for xZone in range(0,xMap): # Make zone "button"
         for yZone in range(0,yMap):
-            if Zones[xZone*yMap+yZone].owner == 0: # If the zone is unclaimed
-                if squareZone("",30+xZone*80,30+yZone*80,80,80,gray,Players[1].color,white,"claim") == 1: # If the zone is clicked
-                    if Players[1].resources >= 5:
-                        print("The zone has been claimed!")
-                        Zones[xZone*yMap+yZone].owner = 1 # Update the owner of the zone object
-                        Players[1].zones = Players[1].zones + 1 # Update player's zone stat
-                        Players[1].resources = Players[1].resources - 5 # Update player's resource stat
-                    else:
-                        print("You do not have enough resources to claim the zone!")
-            elif Zones[xZone*yMap+yZone].owner > 1: # If the zone is owned by enemy player
-                if squareZone("",30+xZone*80,30+yZone*80,80,80,gray,Players[1].color,Players[Zones[xZone*yMap+yZone].owner].color,"claim") == 1: # If the zone is clicked
-                    if Players[1].resources >= 10:
-                        print("The zone has been conquered!")
-                        Players[Zones[xZone*yMap+yZone].owner].zones = Players[Zones[xZone*yMap+yZone].owner].zones - 1 # Update enemy player's zone stat
-                        Zones[xZone*yMap+yZone].owner = 1 # Update the owner of the zone object
-                        Players[1].zones = Players[1].zones + 1 # Update player's zone stat
-                        Players[1].resources = Players[1].resources - 10 # Update player's resource stat
-                    else:
-                        print("You do not have enough resources to claim the zone!")
-            elif Zones[xZone*yMap+yZone].owner == 1: # If the zone is owned by the player
-                if squareZone("",30+xZone*80,30+yZone*80,80,80,gray,Players[1].color,Players[1].color,"claim") == 1: # If the zone is clicked
-                    print("The zone is already yours!")
+            if Players[1].dead == False: # If the player is not dead, let it interact with the zones
+                if Zones[xZone*yMap+yZone].owner == 0: # If the zone is unclaimed
+                    if squareZone("",30+xZone*80,30+yZone*80,80,80,gray,Players[1].color,white,"claim") == 1: # If the zone is clicked
+                        if Players[1].resources >= 5:
+                            print("The zone has been claimed!")
+                            Zones[xZone*yMap+yZone].owner = 1 # Update the owner of the zone object
+                            Players[1].zones = Players[1].zones + 1 # Update player's zone stat
+                            Players[1].resources = Players[1].resources - 5 # Update player's resource stat
+                        else:
+                            print("You do not have enough resources to claim the zone!")
+                elif Zones[xZone*yMap+yZone].owner > 1: # If the zone is owned by enemy player
+                    if squareZone("",30+xZone*80,30+yZone*80,80,80,gray,Players[1].color,Players[Zones[xZone*yMap+yZone].owner].color,"claim") == 1: # If the zone is clicked
+                        if Players[1].resources >= 10:
+                            print("The zone has been conquered!")
+                            Players[Zones[xZone*yMap+yZone].owner].zones = Players[Zones[xZone*yMap+yZone].owner].zones - 1 # Update enemy player's zone stat
+                            if Players[Zones[xZone*yMap+yZone].owner].zones == 0: # If the other player lost all their zones
+                                Players[Zones[xZone*yMap+yZone].owner].dead = True # They are dead
+                            Zones[xZone*yMap+yZone].owner = 1 # Update the owner of the zone object
+                            Players[1].zones = Players[1].zones + 1 # Update player's zone stat
+                            Players[1].resources = Players[1].resources - 10 # Update player's resource stat
+                        else:
+                            print("You do not have enough resources to claim the zone!")
+                elif Zones[xZone*yMap+yZone].owner == 1: # If the zone is owned by the player
+                    if squareZone("",30+xZone*80,30+yZone*80,80,80,gray,Players[1].color,Players[1].color,"claim") == 1: # If the zone is clicked
+                        print("The zone is already yours!")
+            else: # If the player is dead, just draw the zones, all owned by the AIs
+                squareZone("",30+xZone*80,30+yZone*80,80,80,gray,Players[1].color,Players[Zones[xZone*yMap+yZone].owner].color,"None")
     
     if button("Quit",250,693,200,50,red,green,buttonFont,5,"lmb") == 1: # Quit button
         pygame.quit()
@@ -302,8 +308,6 @@ while (screen_id == 2):
         pressedEnter = 0
         print("Turn 1 has ended.")
         for Turn in range(2,nPlayers+1): # AI players take their turns here.
-            print("Turn:")
-            print(Turn)
             pygame.draw.rect(screen,black,(roundUIx,roundUIy,100,25)) # Overwrite round/turn info text
             roundTextSurf, roundTextRect = textObjects("R"+str(Round)+"T"+str(Turn),buttonFont,red) # Round info text
             roundTextRect.topleft = (roundUIx,roundUIy) # Center point of round info text
@@ -317,33 +321,38 @@ while (screen_id == 2):
                     Players[Turn].resources = Players[Turn].resources - 5 # Update player's resource stat
                 elif pickedZone.owner != Turn and Players[Turn].resources >= 10: # If the zone is owned by another player than this AI
                     Players[pickedZone.owner].zones = Players[pickedZone.owner].zones - 1 # Update other player's zone stat
+                    if Players[pickedZone.owner].zones == 0: # If the other player lost all their zones
+                        Players[pickedZone.owner].dead = True # They are dead
                     pickedZone.owner = Turn # Change ownership of the zone
                     Players[Turn].zones = Players[Turn].zones + 1 # Update player's zone stat
                     Players[Turn].resources = Players[Turn].resources - 10 # Update player's resource stat
                 nUnclaimedZones = len([t.owner for t in Zones if t.owner == 0]) # Number of unclaimed zones
-            while Players[Turn].resources >= 10: # When the player has >= 10 resources
+            while Players[Turn].resources >= 10 and Players[Turn].zones < totZones and Players[Turn].dead == False: # When the player has >= 10 resources, doesn't own all zones and is alive
                 pickedZone = random.choice(Zones)
                 if pickedZone.owner != Turn and pickedZone.owner != 0: # If the zone is not owned by the player or unclaimed
                     Players[pickedZone.owner].zones = Players[pickedZone.owner].zones - 1 # Update other player's zone stat
+                    if Players[pickedZone.owner].zones == 0: # If the other player lost all their zones
+                        Players[pickedZone.owner].dead = True # They are dead
                     pickedZone.owner = Turn # Change ownership of the zone
                     Players[Turn].zones = Players[Turn].zones + 1 # Update player's zone stat
                     Players[Turn].resources = Players[Turn].resources - 10 # Update player's resource stat
-        for xZone in range(0,xMap): # Make zone "button"
-            for yZone in range(0,yMap):
-                if Zones[xZone*yMap+yZone].owner == 0: # If the zone is unclaimed
-                    squareZone("",30+xZone*80,30+yZone*80,80,80,gray,Players[1].color,white,"None")
-                elif Zones[xZone*yMap+yZone].owner > 1: # If the zone is owned by enemy player
-                    squareZone("",30+xZone*80,30+yZone*80,80,80,gray,Players[1].color,Players[Zones[xZone*yMap+yZone].owner].color,"None")
-                elif Zones[xZone*yMap+yZone].owner == 1: # If the zone is owned by the player
-                    squareZone("",30+xZone*80,30+yZone*80,80,80,gray,Players[1].color,Players[1].color,"None")
+            for xZone in range(0,xMap): # Make zone "button"
+                for yZone in range(0,yMap):
+                    if Zones[xZone*yMap+yZone].owner == 0: # If the zone is unclaimed
+                        squareZone("",30+xZone*80,30+yZone*80,80,80,gray,Players[1].color,white,"None")
+                    elif Zones[xZone*yMap+yZone].owner > 1: # If the zone is owned by enemy player
+                        squareZone("",30+xZone*80,30+yZone*80,80,80,gray,Players[1].color,Players[Zones[xZone*yMap+yZone].owner].color,"None")
+                    elif Zones[xZone*yMap+yZone].owner == 1: # If the zone is owned by the player
+                        squareZone("",30+xZone*80,30+yZone*80,80,80,gray,Players[1].color,Players[1].color,"None")
             pygame.display.flip()
             time.sleep(0.5)
         for nPlayer in range(0,nPlayers+1): # After all turns are taken, update stats.
-            Players[nPlayer].production = Players[nPlayer].zones  # Update player's production stat
-            Players[nPlayer].resources = int(round(5 + Players[nPlayer].production + (Players[nPlayer].technology+Players[nPlayer].trade)/10 + Players[nPlayer].resources - pow(Players[nPlayer].resources,2)/1000 - Players[nPlayer].overspent/5)) # Update player's resource stat
-            spentOnTech = int(round(Players[nPlayer].techrate*Players[nPlayer].resources)) # Amount spent on tech this round by the player
-            Players[nPlayer].technology = Players[nPlayer].technology + spentOnTech # Update player's technology stat
-            Players[nPlayer].resources = Players[nPlayer].resources - spentOnTech # Update the player's resource stat
+            if Players[Turn].dead == False: # If the player is dead, skip updating their stats
+                Players[nPlayer].production = Players[nPlayer].zones  # Update player's production stat
+                Players[nPlayer].resources = int(round(5 + Players[nPlayer].production + (Players[nPlayer].technology+Players[nPlayer].trade)/10 + Players[nPlayer].resources - pow(Players[nPlayer].resources,2)/1000 - Players[nPlayer].overspent/5)) # Update player's resource stat
+                spentOnTech = int(round(Players[nPlayer].techrate*Players[nPlayer].resources)) # Amount spent on tech this round by the player
+                Players[nPlayer].technology = Players[nPlayer].technology + spentOnTech # Update player's technology stat
+                Players[nPlayer].resources = Players[nPlayer].resources - spentOnTech # Update the player's resource stat
         Round = Round + 1
         Turn = 1
         for nPlayer in range(0,nPlayers+1): # Check if a player has won or been eliminated
@@ -354,15 +363,12 @@ while (screen_id == 2):
                 else: # If the player is an AI
                     print("You have been eliminated!")
                     screen_id = 4
-            elif Players[nPlayer].zones == 0 and nUnclaimedZones == 0: # If the player has no zones on the map, and there are no unclaimed zones
+            elif Players[nPlayer].zones == 0 and nUnclaimedZones == 0 and Players[nPlayer].dead == False: # If the player has no zones on the map, there are no unclaimed zones and it is not dead
+                Players[nPlayer].dead = True # Set the player to dead
                 if nPlayer != 1: # If the player is an AI
                     print("Player has been eliminated!")
-                    Players[nPlayer].production = 0
-                    Players[nPlayer].resources = 0
-                    Players[nPlayer].technology = 0
-                else: # If the player is not an AI
+                if nPlayer == 1: # If the player is not an AI
                     print("You lost!")
-                    screen_id = 4
 
     for event in pygame.event.get(): # Keyboard/mouse event queue. This loop is apparently necessary to make the quit button work.
         if event.type == pygame.KEYDOWN:
