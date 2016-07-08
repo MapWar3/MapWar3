@@ -22,10 +22,15 @@ orange = (255,128,0)
 yellow = (255,255,0)
 green = (0,255,0)
 cyan = (0,255,255)
+brightblue = (0,128,255)
 blue = (0,0,255)
 purple = (128,0,255)
 magenta = (255,0,255)
-playerColors = [white,red,orange,yellow,green,cyan,blue,purple,magenta]
+darkred = (192,0,0)
+darkgreen = (0,192,0)
+playerColors = [white,red,orange,yellow,green,cyan,brightblue,blue,purple,magenta,darkred,darkgreen]
+nationNames = ["Unclaimed","Blaist Blaland","Darvincia","Ethanthova","Auspikitan","Solea","Aeridani","Bielosia","Lyintaria","Czallisto","Bongatar","Dotruga"]
+rulerNames = ["Missingno","Bla","Kalassak","Darvince","Matthias","Fiah","vh","Blotz","Tuto","Yqt","Naru","Mikkel Sikkel"]
 
 # Font definitions
 xyfont = pygame.font.SysFont("century", 20,20) # Font of coordinate display
@@ -67,6 +72,8 @@ class player:
         self.overspent = 0
         self.color = (0,255,255)
         self.dead = False
+        self.nationName = "Kolsebistan"
+        self.rulerName = "Sebastian Castro"
 
 def textObjects(text, font, color): # Text object function for e.g. button text
     textSurface = font.render(text, True, color)
@@ -99,7 +106,7 @@ def squareZone(msg,x,y,w,h,ic,ac,fc,action=None): # Square zone function: Messag
     mouseClick = pygame.mouse.get_pressed() # (l,c,r), 0 or 1 for left, center or right mouse button clicked
     if x+w > mousePos[0] > x and y+h > mousePos[1] > y: # Mouse is over button
         pygame.draw.rect(screen,ac,(x,y,w,h))
-        pygame.draw.rect(screen,fc,(x+5,y+5,w-10,h-10))
+        pygame.draw.rect(screen,fc,(x+2,y+2,w-4,h-4))
         textSurf, textRect = textObjects(msg,buttonFont,ac) # Button text
         if mouseClick[0] ==  1:
             print("button clicked, function!!!")
@@ -110,7 +117,7 @@ def squareZone(msg,x,y,w,h,ic,ac,fc,action=None): # Square zone function: Messag
                 return 1
     else: # Mouse is not over button
         pygame.draw.rect(screen,ic,(x,y,w,h))
-        pygame.draw.rect(screen,fc,(x+5,y+5,w-10,h-10))
+        pygame.draw.rect(screen,fc,(x+2,y+2,w-4,h-4))
         textSurf, textRect = textObjects(msg,buttonFont,ic) # Button text
     textRect.center = (x+w/2,y+h/2) # Center point of button
     screen.blit(textSurf, textRect) # Render button text
@@ -193,13 +200,13 @@ while (screen_id == 1):
     if button("Quit",250,693,200,50,red,green,buttonFont,5,"lmb") == 1: # Quit button
         pygame.quit()
         quit()
-    if yMap < 8:
+    if yMap < 12:
         if button("Height +",mapSizeUIx,mapSizeUIy,100,26,red,green,buttonFontSmall,2,"lmb") == 1: # Map size setting
             yMap = yMap + 1
             print(yMap)
             time.sleep(0.2)
     else: button("Max Height",mapSizeUIx,mapSizeUIy,100,26,red,red,buttonFontSmall,2,"None")
-    if yMap > 2:
+    if yMap > 2 and xMap*(yMap-1) >= nPlayers: # Cannot have map with fewer zones than the number of players
         if button("Height -",mapSizeUIx,mapSizeUIy+25,100,25,red,green,buttonFontSmall,2,"lmb") == 1: # Map size setting
             yMap = yMap - 1
             print(yMap)
@@ -211,16 +218,16 @@ while (screen_id == 1):
             print(xMap)
             time.sleep(0.2)
     else: button("Max Width",mapSizeUIx+100,mapSizeUIy,100,25,red,red,buttonFontSmall,2,"None")
-    if xMap > 2:
+    if xMap > 2 and (xMap-1)*yMap >= nPlayers: # Cannot have map with fewer zones than the number of players
         if button("Width -",mapSizeUIx+100,mapSizeUIy+25,100,25,red,green,buttonFontSmall,2,"lmb") == 1: # Map size setting
             xMap = xMap - 1
             print(xMap)
             time.sleep(0.2)
     else: button("Min Width",mapSizeUIx+100,mapSizeUIy+25,100,25,red,red,buttonFontSmall,2,"None")
     mapSizeTextSurf, mapSizeTextRect = textObjects("Map Size: "+str(xMap)+"x"+str(yMap),buttonFont,red) # Map size info text
-    mapSizeTextRect.center = (mapSizeUIx+300,mapSizeUIy+25) # Center point of map size info text
+    mapSizeTextRect.topleft = (mapSizeUIx+225,mapSizeUIy+12) # Center point of map size info text
     screen.blit(mapSizeTextSurf, mapSizeTextRect) # Render map size info text
-    if nPlayers < 6:
+    if nPlayers < len(playerColors)-1 and nPlayers < xMap*yMap: # Cannot have more players than there are available player colors and zones on the map
         if button("Players +",nPlayerUIx,nPlayerUIy,100,25,red,green,buttonFontSmall,2,"lmb") == 1: # Number of players setting
             nPlayers = nPlayers + 1
             print(nPlayers)
@@ -233,7 +240,7 @@ while (screen_id == 1):
             time.sleep(0.2)
     else: button("Min Players",nPlayerUIx,nPlayerUIy+25,100,25,red,red,buttonFontSmall,2,"None")
     playersTextSurf, playersTextRect = textObjects("Players: "+str(nPlayers),buttonFont,red) # Map size info text
-    playersTextRect.center = (nPlayerUIx+200,nPlayerUIy+25) # Center point of map size info text
+    playersTextRect.topleft = (nPlayerUIx+225,nPlayerUIy+12) # Center point of map size info text
     screen.blit(playersTextSurf, playersTextRect) # Render map size info text
 
     for event in pygame.event.get(): # Keyboard/mouse event queue
@@ -256,11 +263,17 @@ roundUIx = 25
 roundUIy = 640
 statsUIx = 25
 statsUIy = 670
+scoreUIx = 680
+scoreUIy = 680-12*nPlayers
+scoreUIspacing = 60
+zoneSize = 50
 print("Generating player objects")
 for nPlayer in range(0,nPlayers+1):
     currPlayer = player(nPlayer)
     Players.append(currPlayer)
     Players[nPlayer].color = playerColors[nPlayer]
+    Players[nPlayer].nationName = nationNames[nPlayer]
+    Players[nPlayer].rulerName = rulerNames[nPlayer]
     #print(Players[nPlayer].owner)
     #print(Players[nPlayer].color)
 print("Generating zone objects")
@@ -281,18 +294,54 @@ while (screen_id == 2):
     pressed = pygame.key.get_pressed()
     mousePos = pygame.mouse.get_pos() # (x,y) of cursor relative to top left of display
     mouseClick = pygame.mouse.get_pressed() # (l,c,r), 0 or 1 for left, center or right mouse button clicked
-    pygame.draw.rect(screen,gray,(25,25,80*xMap+10,80*yMap+10)) # Map frame
+    pygame.draw.rect(screen,gray,(25,25,zoneSize*xMap+10,zoneSize*yMap+10)) # Map frame
     roundTextSurf, roundTextRect = textObjects("R"+str(Round)+"T"+str(Turn),buttonFont,red) # Round info text
     roundTextRect.topleft = (roundUIx,roundUIy) # Top left point of round info text
     screen.blit(roundTextSurf, roundTextRect) # Render round info text
     statsTextSurf, statsTextRect = textObjects("Zones: "+str(Players[1].zones)+" Production: "+str(Players[1].production)+" Technology: "+str(Players[1].technology)+" Tech Rate: "+str(100*Players[1].techrate)+"% Trade: "+str(Players[1].trade)+" Resources: "+str(Players[1].resources),buttonFontSmall,red) # Round info text
     statsTextRect.topleft = (statsUIx,statsUIy) # Top left point of round info text
     screen.blit(statsTextSurf, statsTextRect) # Render round info text
+
+    if button("Statistics",scoreUIx,scoreUIy,200,50,red,green,buttonFont,5,"lmb") == 1: # Statistics button
+        print("Stats!")
+    # Render scoreboard info text
+    nTS, nTR = textObjects("Nation",buttonFontSmall,red)
+    nTR.topleft = (scoreUIx,scoreUIy+50)
+    screen.blit(nTS, nTR)
+    zTS, zTR = textObjects("Zones",buttonFontSmall,red)
+    zTR.topleft = (scoreUIx+100,scoreUIy+50)
+    screen.blit(zTS, zTR)
+    pTS, pTR = textObjects("Prod",buttonFontSmall,red)
+    pTR.topleft = (scoreUIx+scoreUIspacing+100,scoreUIy+50)
+    screen.blit(pTS, pTR)
+    tTS, tTR = textObjects("Tech",buttonFontSmall,red)
+    tTR.topleft = (scoreUIx+2*scoreUIspacing+100,scoreUIy+50)
+    screen.blit(tTS, tTR)
+    rTS, rTR = textObjects("Res",buttonFontSmall,red)
+    rTR.topleft = (scoreUIx+3*scoreUIspacing+100,scoreUIy+50)
+    screen.blit(rTS, rTR)
+    for n in range(1,nPlayers+1): # Render scoreboard stats
+        nTS, nTR = textObjects(str(Players[n].nationName),buttonFontSmall,Players[n].color)
+        nTR.topleft = (scoreUIx,scoreUIy+12*n+50)
+        screen.blit(nTS, nTR)
+        zTS, zTR = textObjects(str(Players[n].zones),buttonFontSmall,Players[n].color)
+        zTR.topleft = (scoreUIx+100,scoreUIy+12*n+50)
+        screen.blit(zTS, zTR)
+        pTS, pTR = textObjects(str(Players[n].production),buttonFontSmall,Players[n].color)
+        pTR.topleft = (scoreUIx+scoreUIspacing+100,scoreUIy+12*n+50)
+        screen.blit(pTS, pTR)
+        tTS, tTR = textObjects(str(Players[n].technology),buttonFontSmall,Players[n].color)
+        tTR.topleft = (scoreUIx+2*scoreUIspacing+100,scoreUIy+12*n+50)
+        screen.blit(tTS, tTR)
+        rTS, rTR = textObjects(str(Players[n].resources),buttonFontSmall,Players[n].color)
+        rTR.topleft = (scoreUIx+3*scoreUIspacing+100,scoreUIy+12*n+50)
+        screen.blit(rTS, rTR)
+    
     for xZone in range(0,xMap): # Make zone "button"
         for yZone in range(0,yMap):
             if Players[1].dead == False: # If the player is not dead, let it interact with the zones
                 if Zones[xZone*yMap+yZone].owner == 0: # If the zone is unclaimed
-                    if squareZone("",30+xZone*80,30+yZone*80,80,80,gray,Players[1].color,white,"claim") == 1: # If the zone is clicked
+                    if squareZone("",30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,Players[1].color,white,"claim") == 1: # If the zone is clicked
                         if Players[1].resources >= 5: # If the player can afford to claim it
                             if Players[1].zones == 0: # If the player has no zones on the map, it can claim any unclaimed zone
                                 print("The zone has been claimed!")
@@ -309,7 +358,7 @@ while (screen_id == 2):
                         else:
                             print("You do not have enough resources to claim the zone!")
                 elif Zones[xZone*yMap+yZone].owner > 1: # If the zone is owned by enemy player
-                    if squareZone("",30+xZone*80,30+yZone*80,80,80,gray,Players[1].color,Players[Zones[xZone*yMap+yZone].owner].color,"claim") == 1: # If the zone is clicked
+                    if squareZone("",30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,Players[1].color,Players[Zones[xZone*yMap+yZone].owner].color,"claim") == 1: # If the zone is clicked
                         if Players[1].resources >= 10:
                             if Zones[xZone*yMap+yZone].isAdjacent(Zones,1,xMap,yMap) == True:
                                 print("The zone has been conquered!")
@@ -324,10 +373,10 @@ while (screen_id == 2):
                         else:
                             print("You do not have enough resources to claim the zone!")
                 elif Zones[xZone*yMap+yZone].owner == 1: # If the zone is owned by the player
-                    if squareZone("",30+xZone*80,30+yZone*80,80,80,gray,Players[1].color,Players[1].color,"claim") == 1: # If the zone is clicked
+                    if squareZone("",30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,Players[1].color,Players[1].color,"claim") == 1: # If the zone is clicked
                         print("The zone is already yours!")
             else: # If the player is dead, just draw the zones, all owned by the AIs
-                squareZone("",30+xZone*80,30+yZone*80,80,80,gray,Players[1].color,Players[Zones[xZone*yMap+yZone].owner].color,"None")
+                squareZone("",30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,Players[1].color,Players[Zones[xZone*yMap+yZone].owner].color,"None")
     
     if button("Quit",250,693,200,50,red,green,buttonFont,5,"lmb") == 1: # Quit button
         pygame.quit()
@@ -341,7 +390,11 @@ while (screen_id == 2):
             roundTextRect.topleft = (roundUIx,roundUIy) # Center point of round info text
             screen.blit(roundTextSurf, roundTextRect) # Render round info text
             button("Processing",25,693,200,50,green,green,buttonFont,5,"None")
-            while Players[Turn].resources >= 5 and nUnclaimedZones >= 1: # When the player has >= 5 resources and there are unclaimed zones
+            attempt = 0
+            while Players[Turn].resources >= 5 and nUnclaimedZones >= 1: # When the player has >= 5 resources and there are unclaimed zones. Problem: If the player is surrounded, this loop can be infinite!
+                if attempt > 100*xMap*yMap: # To avoid infinite loop if the player is surrounded, it gets a max number of attempts.
+                    break
+                attempt = attempt + 1
                 pickedZone = random.choice(Zones)
                 if pickedZone.owner == 0: # If the zone is unclaimed
                     if Players[Turn].zones == 0:
@@ -372,13 +425,14 @@ while (screen_id == 2):
             for xZone in range(0,xMap): # Make zone "button"
                 for yZone in range(0,yMap):
                     if Zones[xZone*yMap+yZone].owner == 0: # If the zone is unclaimed
-                        squareZone("",30+xZone*80,30+yZone*80,80,80,gray,Players[1].color,white,"None")
+                        squareZone("",30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,Players[1].color,white,"None")
                     elif Zones[xZone*yMap+yZone].owner > 1: # If the zone is owned by enemy player
-                        squareZone("",30+xZone*80,30+yZone*80,80,80,gray,Players[1].color,Players[Zones[xZone*yMap+yZone].owner].color,"None")
+                        squareZone("",30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,Players[1].color,Players[Zones[xZone*yMap+yZone].owner].color,"None")
                     elif Zones[xZone*yMap+yZone].owner == 1: # If the zone is owned by the player
-                        squareZone("",30+xZone*80,30+yZone*80,80,80,gray,Players[1].color,Players[1].color,"None")
+                        squareZone("",30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,Players[1].color,Players[1].color,"None")
             pygame.display.flip()
-            time.sleep(0.5)
+            if Players[Turn].dead == False: # Pause for 0.5s if the player isn't dead
+                time.sleep(0.5)
         for nPlayer in range(0,nPlayers+1): # After all turns are taken, update stats.
             if Players[nPlayer].dead == False: # If the player is dead, skip updating their stats
                 Players[nPlayer].production = Players[nPlayer].zones  # Update player's production stat
