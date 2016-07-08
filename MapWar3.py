@@ -38,6 +38,23 @@ class squareZoneObj:
         self.x = x
         self.y = y
 
+    def isAdjacent(self,Zones,own,xMap,yMap):
+        claimTheZone = False
+        for pxZone in range(0,xMap):
+            for pyZone in range (0,yMap):
+                if Zones[pxZone*yMap+pyZone].owner == own:
+                    if self.x == Zones[pxZone*yMap+pyZone].x and self.y == Zones[pxZone*yMap+pyZone].y: # If the two zones checked are the same, return they are not adjacent
+                        claimTheZone = False
+                    elif self.x == Zones[pxZone*yMap+pyZone].x or self.y == Zones[pxZone*yMap+pyZone].y: # If the zones have either identical x or y coords
+                        if abs(self.y - Zones[pxZone*yMap+pyZone].y) <= 1 and abs(self.x - Zones[pxZone*yMap+pyZone].x) <= 1:
+                            claimTheZone = True
+                        elif self.x == 0 and Zones[pxZone*yMap+pyZone].x == xMap-1 and abs(self.y - Zones[pxZone*yMap+pyZone].y) <= 1:
+                            claimTheZone = True
+                        elif self.x == xMap-1 and Zones[pxZone*yMap+pyZone].x == 0 and abs(self.y - Zones[pxZone*yMap+pyZone].y) <= 1:
+                            claimTheZone = True
+        if claimTheZone == True:
+            return True
+
 class player:
     def __init__(self,owner):
         self.owner = owner
@@ -276,23 +293,34 @@ while (screen_id == 2):
             if Players[1].dead == False: # If the player is not dead, let it interact with the zones
                 if Zones[xZone*yMap+yZone].owner == 0: # If the zone is unclaimed
                     if squareZone("",30+xZone*80,30+yZone*80,80,80,gray,Players[1].color,white,"claim") == 1: # If the zone is clicked
-                        if Players[1].resources >= 5:
-                            print("The zone has been claimed!")
-                            Zones[xZone*yMap+yZone].owner = 1 # Update the owner of the zone object
-                            Players[1].zones = Players[1].zones + 1 # Update player's zone stat
-                            Players[1].resources = Players[1].resources - 5 # Update player's resource stat
+                        if Players[1].resources >= 5: # If the player can afford to claim it
+                            if Players[1].zones == 0: # If the player has no zones on the map, it can claim any unclaimed zone
+                                print("The zone has been claimed!")
+                                Zones[xZone*yMap+yZone].owner = 1 # Update the owner of the zone object
+                                Players[1].zones = Players[1].zones + 1 # Update player's zone stat
+                                Players[1].resources = Players[1].resources - 5 # Update player's resource stat
+                            elif Zones[xZone*yMap+yZone].isAdjacent(Zones,1,xMap,yMap) == True: # If the player has zones on the map, check if they're adjacent to the one it tries to claim
+                                print("The zone has been claimed!")
+                                Zones[xZone*yMap+yZone].owner = 1 # Update the owner of the zone object
+                                Players[1].zones = Players[1].zones + 1 # Update player's zone stat
+                                Players[1].resources = Players[1].resources - 5 # Update player's resource stat
+                            else:
+                                print("The zones are not adjacent!")
                         else:
                             print("You do not have enough resources to claim the zone!")
                 elif Zones[xZone*yMap+yZone].owner > 1: # If the zone is owned by enemy player
                     if squareZone("",30+xZone*80,30+yZone*80,80,80,gray,Players[1].color,Players[Zones[xZone*yMap+yZone].owner].color,"claim") == 1: # If the zone is clicked
                         if Players[1].resources >= 10:
-                            print("The zone has been conquered!")
-                            Players[Zones[xZone*yMap+yZone].owner].zones = Players[Zones[xZone*yMap+yZone].owner].zones - 1 # Update enemy player's zone stat
-                            if Players[Zones[xZone*yMap+yZone].owner].zones == 0: # If the other player lost all their zones
-                                Players[Zones[xZone*yMap+yZone].owner].dead = True # They are dead
-                            Zones[xZone*yMap+yZone].owner = 1 # Update the owner of the zone object
-                            Players[1].zones = Players[1].zones + 1 # Update player's zone stat
-                            Players[1].resources = Players[1].resources - 10 # Update player's resource stat
+                            if Zones[xZone*yMap+yZone].isAdjacent(Zones,1,xMap,yMap) == True:
+                                print("The zone has been conquered!")
+                                Players[Zones[xZone*yMap+yZone].owner].zones = Players[Zones[xZone*yMap+yZone].owner].zones - 1 # Update enemy player's zone stat
+                                if Players[Zones[xZone*yMap+yZone].owner].zones == 0: # If the other player lost all their zones
+                                    Players[Zones[xZone*yMap+yZone].owner].dead = True # They are dead
+                                Zones[xZone*yMap+yZone].owner = 1 # Update the owner of the zone object
+                                Players[1].zones = Players[1].zones + 1 # Update player's zone stat
+                                Players[1].resources = Players[1].resources - 10 # Update player's resource stat
+                            else:
+                                print("The zones are not adjacent!")
                         else:
                             print("You do not have enough resources to claim the zone!")
                 elif Zones[xZone*yMap+yZone].owner == 1: # If the zone is owned by the player
@@ -316,10 +344,15 @@ while (screen_id == 2):
             while Players[Turn].resources >= 5 and nUnclaimedZones >= 1: # When the player has >= 5 resources and there are unclaimed zones
                 pickedZone = random.choice(Zones)
                 if pickedZone.owner == 0: # If the zone is unclaimed
-                    pickedZone.owner = Turn # Change ownership of the zone
-                    Players[Turn].zones = Players[Turn].zones + 1 # Update player's zone stat
-                    Players[Turn].resources = Players[Turn].resources - 5 # Update player's resource stat
-                elif pickedZone.owner != Turn and Players[Turn].resources >= 10: # If the zone is owned by another player than this AI
+                    if Players[Turn].zones == 0:
+                        pickedZone.owner = Turn # Change ownership of the zone
+                        Players[Turn].zones = Players[Turn].zones + 1 # Update player's zone stat
+                        Players[Turn].resources = Players[Turn].resources - 5 # Update player's resource stat
+                    elif pickedZone.isAdjacent(Zones,Turn,xMap,yMap) == True:
+                        pickedZone.owner = Turn # Change ownership of the zone
+                        Players[Turn].zones = Players[Turn].zones + 1 # Update player's zone stat
+                        Players[Turn].resources = Players[Turn].resources - 5 # Update player's resource stat
+                elif pickedZone.owner != Turn and Players[Turn].resources >= 10 and pickedZone.isAdjacent(Zones,Turn,xMap,yMap) == True: # If the zone is owned by another player than this AI
                     Players[pickedZone.owner].zones = Players[pickedZone.owner].zones - 1 # Update other player's zone stat
                     if Players[pickedZone.owner].zones == 0: # If the other player lost all their zones
                         Players[pickedZone.owner].dead = True # They are dead
@@ -329,7 +362,7 @@ while (screen_id == 2):
                 nUnclaimedZones = len([t.owner for t in Zones if t.owner == 0]) # Number of unclaimed zones
             while Players[Turn].resources >= 10 and Players[Turn].zones < totZones and Players[Turn].dead == False: # When the player has >= 10 resources, doesn't own all zones and is alive
                 pickedZone = random.choice(Zones)
-                if pickedZone.owner != Turn and pickedZone.owner != 0: # If the zone is not owned by the player or unclaimed
+                if pickedZone.owner != Turn and pickedZone.owner != 0 and pickedZone.isAdjacent(Zones,Turn,xMap,yMap) == True: # If the zone is not owned by the player or unclaimed
                     Players[pickedZone.owner].zones = Players[pickedZone.owner].zones - 1 # Update other player's zone stat
                     if Players[pickedZone.owner].zones == 0: # If the other player lost all their zones
                         Players[pickedZone.owner].dead = True # They are dead
@@ -347,7 +380,7 @@ while (screen_id == 2):
             pygame.display.flip()
             time.sleep(0.5)
         for nPlayer in range(0,nPlayers+1): # After all turns are taken, update stats.
-            if Players[Turn].dead == False: # If the player is dead, skip updating their stats
+            if Players[nPlayer].dead == False: # If the player is dead, skip updating their stats
                 Players[nPlayer].production = Players[nPlayer].zones  # Update player's production stat
                 Players[nPlayer].resources = int(round(5 + Players[nPlayer].production + (Players[nPlayer].technology+Players[nPlayer].trade)/10 + Players[nPlayer].resources - pow(Players[nPlayer].resources,2)/1000 - Players[nPlayer].overspent/5)) # Update player's resource stat
                 spentOnTech = int(round(Players[nPlayer].techrate*Players[nPlayer].resources)) # Amount spent on tech this round by the player
