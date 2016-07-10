@@ -68,19 +68,40 @@ class squareZoneObj:
 class player:
     def __init__(self,owner):
         self.owner = owner
-        self.zones = long(0)
-        self.resources = long(5)
-        self.production = long(0)
-        self.techrate = 0.05
-        self.technology = long(0)
-        self.spentOnTech = long(0)
-        self.trade = long(0)
-        self.overspent = long(0)
         self.color = (0,255,255)
         self.dead = False
         self.deathAnnounced = False
         self.nationName = "Kolsebistan"
         self.rulerName = "Sebastian Castro"
+        self.zones = long(0)
+        self.resources = long(5)
+        self.resourcesStolen = long(0)
+        self.production = long(0)
+        self.techrate = 0.05
+        self.technology = long(0)
+        self.techStolen = long(0)
+        self.spentOnTech = long(0)
+        self.realProduction = long(0)
+        self.realIncome = long(0)
+        self.trade = long(0)
+        self.overspent = long(0)
+        self.roundHist = [long(0)]
+        self.zonesHist = [long(0)]
+        self.resourcesHist = [long(0)]
+        self.productionHist = [long(0)]
+        self.techrateHist = [0.05]
+        self.technologyHist = [long(0)]
+        self.spentOnTechHist = [long(0)]
+        self.tradeHist = [long(0)]
+        self.overspentHist = [long(0)]
+        self.realProductionHist = [long(0)]
+        self.realIncomeHist = [long(0)]
+
+    def killPlayer(self,player):
+        player.techStolen = self.technology # The player steals their technology
+        player.resourcesStolen = self.resources # The player steals their resources
+        self.dead = True
+        print("Round "+str(Round)+": "+self.nationName+" has been defeated by "+player.nationName+"! "+player.nationName+" stole "+str('{0:g}'.format(self.technology))+" technology, "+str('{0:g}'.format(self.resources))+" resources and all of their oatmeal.")
 
 def textObjects(text, font, color): # Text object function for e.g. button text
     textSurface = font.render(text, True, color)
@@ -207,6 +228,15 @@ while True:
     typingNationName = True
     typingRulerName = False
     specMode = False # Spectator mode
+    zonesRecord = long(1) # Records for rendering graphs. Set to 1 to avoid div by 0 error.
+    productionRecord = long(1)
+    resourcesRecord = long(1)
+    technologyRecord = long(1)
+    spentOnTechRecord = long(1)
+    tradeRecord = long(1)
+    overspentRecord = long(1)
+    realProductionRecord = long(1)
+    realIncomeRecord = long(1)
     # Position of interface elements:
     mapSizeUIx = 25
     mapSizeUIy = 100
@@ -214,10 +244,12 @@ while True:
     nPlayerUIy = 175
     delayUIx = 25
     delayUIy = 250
-    natNameUIx = 150
-    natNameUIy = 325
-    colorUIx = 25
+    specUIx = 25
+    specUIy = 325
+    colorUIx = 300
     colorUIy = 325
+    natNameUIx = 425
+    natNameUIy = 325
     time.sleep(0.5) # Pause 0.5 s
     for event in pygame.event.get(): pass # Keyboard/mouse event queue
 
@@ -320,11 +352,11 @@ while True:
                 typingRulerName = False
                 time.sleep(0.1)
         if specMode == False: # Spectator mode button
-            if button("Conquest Mode",natNameUIx+400,natNameUIy,250,50,red,green,buttonFont,4,"lmb") == 1:
+            if button("Conquest Mode",specUIx,specUIy,250,50,red,green,buttonFont,4,"lmb") == 1:
                 specMode = True
                 time.sleep(0.1)
         else:
-            if button("Spectator Mode",natNameUIx+400,natNameUIy,250,50,yellow,green,buttonFont,4,"lmb") == 1:
+            if button("Spectator Mode",specUIx,specUIy,250,50,yellow,green,buttonFont,4,"lmb") == 1:
                 specMode = False
                 time.sleep(0.1)
         natNameTextSurf, natNameTextRect = textObjects("Nation Name: "+typedNationName,buttonFont,red) # Nation name info text
@@ -391,11 +423,6 @@ while True:
     #intro3  = pygame.image.load("2ndscreen.png").convert()
     #screen.blit(intro3, (0,0))
     pygame.display.flip()
-    pressedEnter = 0
-    Round = 0 # Round variable
-    Turn = 1 # Turn variable
-    totZones = xMap*yMap # Total number of zones on map
-    Players = [] # Generate player objects
     # Positions of interface elements:
     roundUIx = 25
     roundUIy = 640
@@ -404,6 +431,12 @@ while True:
     scoreUIx = 680
     scoreUIy = 680-12*nPlayers
     scoreUIspacing = 60
+    pressedEnter = 0
+    Round = 0 # Round variable
+    Turn = 1 # Turn variable
+    showStats = False
+    endRound = long(999999999999) # The end round of the game. Changed later during game.
+    totZones = xMap*yMap # Total number of zones on map
     zoneSize = 75
     if xMap > 8 or yMap > 8:
         zoneSize = 50
@@ -414,6 +447,7 @@ while True:
                 if xMap > 20 or yMap > 20:
                     zoneSize = 20
     print("Generating player objects")
+    Players = [] # Generate player objects
     for nPlayer in range(0,nPlayers+1):
         currPlayer = player(nPlayer)
         Players.append(currPlayer)
@@ -459,13 +493,192 @@ while True:
         roundTextSurf, roundTextRect = textObjects("R"+str(Round)+"T"+str(Turn),buttonFont,red) # Round info text
         roundTextRect.topleft = (roundUIx,roundUIy) # Top left point of round info text
         screen.blit(roundTextSurf, roundTextRect) # Render round info text
-        statsTextSurf, statsTextRect = textObjects("Zones: "+str(Players[1].zones)+" Production: "+str(Players[1].production)+" Technology: "+str(Players[1].technology)+" Tech Rate: "+str(100*Players[1].techrate)+"% Trade: "+str(Players[1].trade)+" Resources: "+str(Players[1].resources),buttonFontSmall,red) # Round info text
+        statsTextSurf, statsTextRect = textObjects("Zones: "+str('{0:g}'.format(Players[1].zones))+" Production: "+str('{0:g}'.format(Players[1].production))+" Technology: "+str('{0:g}'.format(Players[1].technology))+" Tech Rate: "+str(100*Players[1].techrate)+"% Trade: "+str('{0:g}'.format(Players[1].trade))+" Resources: "+str('{0:g}'.format(Players[1].resources)),buttonFontSmall,red) # Round info text
         statsTextRect.topleft = (statsUIx,statsUIy) # Top left point of round info text
         screen.blit(statsTextSurf, statsTextRect) # Render round info text
 
         if button("Statistics",scoreUIx,scoreUIy,200,50,red,green,buttonFont,5,"lmb") == 1: # Statistics button
-            #print("Stats!")
+            showStats = True
             pass
+        if showStats == True: # STATISTICS screen
+            nPickedGraph = 1
+            nGraphs = 7
+            stScoreUIx = 680
+            stScoreUIy = 680-12*nPlayers
+            stScoreUIspacing = 60
+            stGraphUIx = 40
+            stGraphUIy = 50
+            stGraphUIwidth = 620
+            stGraphUIheight = 590
+            screen.fill((0, 0, 0)) # Black screen
+            pygame.display.flip()
+            time.sleep(0.5)
+            for event in pygame.event.get(): pass # Keyboard/mouse event queue
+
+        while (showStats == True): # STATISTICS screen
+            screen.fill((0, 0, 0)) # Black screen
+            pressed = pygame.key.get_pressed()
+            mousePos = pygame.mouse.get_pos() # (x,y) of cursor relative to top left of display
+            mouseClick = pygame.mouse.get_pressed() # (l,c,r), 0 or 1 for left, center or right mouse button clicked
+            if button("Back",25,693,200,50,red,green,buttonFont,5,"lmb") == 1: # Back button
+                time.sleep(0.5)
+                for event in pygame.event.get(): pass # Keyboard/mouse event queue
+                showStats = False
+            if button("Quit",250,693,200,50,red,green,buttonFont,5,"lmb") == 1: # Quit button
+                pygame.quit()
+                quit()
+            if nPickedGraph < nGraphs: # Graph picker
+                if button("Graph",475,693,175,50,red,green,buttonFont,5,"lmb") == 1:
+                    nPickedGraph = nPickedGraph + 1
+                    time.sleep(0.2)
+            elif button("Graph",475,693,175,50,red,green,buttonFont,5,"lmb") == 1:
+                nPickedGraph = 1
+                time.sleep(0.2)
+
+            for event in pygame.event.get(): # Keyboard/mouse event queue
+                pass # This loop is apparently necessary to make the quit button work.
+
+            # Render graphs
+            pygame.draw.rect(screen,gray,(stGraphUIx-5,stGraphUIy-5,stGraphUIwidth+10,stGraphUIheight+10)) # Graph frame
+            pygame.draw.rect(screen,black,(stGraphUIx,stGraphUIy,stGraphUIwidth,stGraphUIheight)) # Graph background
+            
+            if Round > 0:
+                xGraphSpacing = float(stGraphUIwidth)/float(len(Players[n].roundHist)-1)
+                if nPickedGraph == 1:
+                    graphTextSurf, graphTextRect = textObjects("Zones",buttonFont,red) # Graph title
+                    graphTextRect.topleft = (stGraphUIx,stGraphUIy-40) # Top left point of graph title
+                    screen.blit(graphTextSurf, graphTextRect) # Render graph title
+                    yGraphSpacing = float(stGraphUIheight)/float(totZones)
+                    for n in range(1,nPlayers+1): # Render graph content
+                        pygame.draw.lines(screen, Players[n].color, False, zip([stGraphUIx+xGraphSpacing*x for x in Players[n].roundHist],[stGraphUIy+stGraphUIheight-yGraphSpacing*x for x in Players[n].zonesHist]), 2)
+                elif nPickedGraph == 2:
+                    graphTextSurf, graphTextRect = textObjects("Production",buttonFont,red) # Graph title
+                    graphTextRect.topleft = (stGraphUIx,stGraphUIy-40) # Top left point of graph title
+                    screen.blit(graphTextSurf, graphTextRect) # Render graph title
+                    yGraphSpacing = float(stGraphUIheight)/float(productionRecord)
+                    for n in range(1,nPlayers+1): # Render graph content
+                        pygame.draw.lines(screen, Players[n].color, False, zip([stGraphUIx+xGraphSpacing*x for x in Players[n].roundHist],[stGraphUIy+stGraphUIheight-yGraphSpacing*x for x in Players[n].productionHist]), 2)
+                elif nPickedGraph == 3:
+                    graphTextSurf, graphTextRect = textObjects("Real Production",buttonFont,red) # Graph title
+                    graphTextRect.topleft = (stGraphUIx,stGraphUIy-40) # Top left point of graph title
+                    screen.blit(graphTextSurf, graphTextRect) # Render graph title
+                    yGraphSpacing = float(stGraphUIheight)/float(realProductionRecord)
+                    for n in range(1,nPlayers+1): # Render graph content
+                        pygame.draw.lines(screen, Players[n].color, False, zip([stGraphUIx+xGraphSpacing*x for x in Players[n].roundHist],[stGraphUIy+stGraphUIheight-yGraphSpacing*x for x in Players[n].realProductionHist]), 2)
+                elif nPickedGraph == 8:
+                    graphTextSurf, graphTextRect = textObjects("Real Income",buttonFont,red) # Graph title
+                    graphTextRect.topleft = (stGraphUIx,stGraphUIy-40) # Top left point of graph title
+                    screen.blit(graphTextSurf, graphTextRect) # Render graph title
+                    yGraphSpacing = float(stGraphUIheight)/float(realIncomeRecord)
+                    for n in range(1,nPlayers+1): # Render graph content
+                        pygame.draw.lines(screen, Players[n].color, False, zip([stGraphUIx+xGraphSpacing*x for x in Players[n].roundHist],[stGraphUIy+stGraphUIheight-yGraphSpacing*x for x in Players[n].realIncomeHist]), 2)
+                elif nPickedGraph == 4:
+                    graphTextSurf, graphTextRect = textObjects("Income",buttonFont,red) # Graph title
+                    graphTextRect.topleft = (stGraphUIx,stGraphUIy-40) # Top left point of graph title
+                    screen.blit(graphTextSurf, graphTextRect) # Render graph title
+                    yGraphSpacing = float(stGraphUIheight)/float(resourcesRecord)
+                    for n in range(1,nPlayers+1): # Render graph content
+                        pygame.draw.lines(screen, Players[n].color, False, zip([stGraphUIx+xGraphSpacing*x for x in Players[n].roundHist],[stGraphUIy+stGraphUIheight-yGraphSpacing*x for x in Players[n].resourcesHist]), 2)
+                elif nPickedGraph == 5:
+                    graphTextSurf, graphTextRect = textObjects("Technology",buttonFont,red) # Graph title
+                    graphTextRect.topleft = (stGraphUIx,stGraphUIy-40) # Top left point of graph title
+                    screen.blit(graphTextSurf, graphTextRect) # Render graph title
+                    yGraphSpacing = float(stGraphUIheight)/float(technologyRecord)
+                    for n in range(1,nPlayers+1): # Render graph content
+                        pygame.draw.lines(screen, Players[n].color, False, zip([stGraphUIx+xGraphSpacing*x for x in Players[n].roundHist],[stGraphUIy+stGraphUIheight-yGraphSpacing*x for x in Players[n].technologyHist]), 2)
+                elif nPickedGraph == 6:
+                    graphTextSurf, graphTextRect = textObjects("Tech Rate",buttonFont,red) # Graph title
+                    graphTextRect.topleft = (stGraphUIx,stGraphUIy-40) # Top left point of graph title
+                    screen.blit(graphTextSurf, graphTextRect) # Render graph title
+                    yGraphSpacing = float(stGraphUIheight)/float(0.25)
+                    for n in range(1,nPlayers+1): # Render graph content
+                        pygame.draw.lines(screen, Players[n].color, False, zip([stGraphUIx+xGraphSpacing*x for x in Players[n].roundHist],[stGraphUIy+stGraphUIheight-yGraphSpacing*x for x in Players[n].techrateHist]), 2)
+                elif nPickedGraph == 7:
+                    graphTextSurf, graphTextRect = textObjects("Spent on Technology",buttonFont,red) # Graph title
+                    graphTextRect.topleft = (stGraphUIx,stGraphUIy-40) # Top left point of graph title
+                    screen.blit(graphTextSurf, graphTextRect) # Render graph title
+                    yGraphSpacing = float(stGraphUIheight)/float(spentOnTechRecord)
+                    for n in range(1,nPlayers+1): # Render graph content
+                        pygame.draw.lines(screen, Players[n].color, False, zip([stGraphUIx+xGraphSpacing*x for x in Players[n].roundHist],[stGraphUIy+stGraphUIheight-yGraphSpacing*x for x in Players[n].spentOnTechHist]), 2)
+                elif nPickedGraph == 9:
+                    graphTextSurf, graphTextRect = textObjects("Trade",buttonFont,red) # Graph title
+                    graphTextRect.topleft = (stGraphUIx,stGraphUIy-40) # Top left point of graph title
+                    screen.blit(graphTextSurf, graphTextRect) # Render graph title
+                    yGraphSpacing = float(stGraphUIheight)/float(tradeRecord)
+                    for n in range(1,nPlayers+1): # Render graph content
+                        pygame.draw.lines(screen, Players[n].color, False, zip([stGraphUIx+xGraphSpacing*x for x in Players[n].roundHist],[stGraphUIy+stGraphUIheight-yGraphSpacing*x for x in Players[n].tradeHist]), 2)
+                elif nPickedGraph == 10:
+                    graphTextSurf, graphTextRect = textObjects("Overspent",buttonFont,red) # Graph title
+                    graphTextRect.topleft = (stGraphUIx,stGraphUIy-40) # Top left point of graph title
+                    screen.blit(graphTextSurf, graphTextRect) # Render graph title
+                    yGraphSpacing = float(stGraphUIheight)/float(overspentRecord)
+                    for n in range(1,nPlayers+1): # Render graph content
+                        pygame.draw.lines(screen, Players[n].color, False, zip([stGraphUIx+xGraphSpacing*x for x in Players[n].roundHist],[stGraphUIy+stGraphUIheight-yGraphSpacing*x for x in Players[n].overspentHist]), 2)
+            else:
+                graphTextSurf, graphTextRect = textObjects("Cannot show graph in Round 0",buttonFont,red) # Graph title
+                graphTextRect.topleft = (stGraphUIx,stGraphUIy-40) # Top left point of graph title
+                screen.blit(graphTextSurf, graphTextRect) # Render graph title
+            
+            # Render scoreboard info text
+            nTS, nTR = textObjects("Nation",buttonFontSmall,red)
+            nTR.topleft = (scoreUIx,scoreUIy+50)
+            screen.blit(nTS, nTR)
+            zTS, zTR = textObjects("Zones",buttonFontSmall,red)
+            zTR.topleft = (scoreUIx+100,scoreUIy+50)
+            screen.blit(zTS, zTR)
+            pTS, pTR = textObjects("Prod",buttonFontSmall,red)
+            pTR.topleft = (scoreUIx+scoreUIspacing+100,scoreUIy+50)
+            screen.blit(pTS, pTR)
+            tTS, tTR = textObjects("Tech",buttonFontSmall,red)
+            tTR.topleft = (scoreUIx+2*scoreUIspacing+100,scoreUIy+50)
+            screen.blit(tTS, tTR)
+            rTS, rTR = textObjects("Res",buttonFontSmall,red)
+            rTR.topleft = (scoreUIx+3*scoreUIspacing+100,scoreUIy+50)
+            screen.blit(rTS, rTR)
+            if Round == 0:
+                sortedPlayers = Players[1:nPlayers+1]
+            else:
+                sortedPlayers = sorted(Players[1:nPlayers+1], key=attrgetter('zones'), reverse=True)
+            for n in range(0,nPlayers): # Render scoreboard stats
+                if sortedPlayers[n].dead == False:
+                    sbcolor = sortedPlayers[n].color
+                else:
+                    sbcolor = gray
+                nTS, nTR = textObjects(str(sortedPlayers[n].nationName),buttonFontSmall,sbcolor)
+                nTR.topleft = (stScoreUIx,stScoreUIy+12*n+62)
+                screen.blit(nTS, nTR)
+                zTS, zTR = textObjects(str(sortedPlayers[n].zones),buttonFontSmall,sbcolor)
+                zTR.topleft = (stScoreUIx+100,stScoreUIy+12*n+62)
+                screen.blit(zTS, zTR)
+                pTS, pTR = textObjects(str(sortedPlayers[n].production),buttonFontSmall,sbcolor)
+                pTR.topleft = (stScoreUIx+stScoreUIspacing+100,stScoreUIy+12*n+62)
+                screen.blit(pTS, pTR)
+                if sortedPlayers[n].technology < 1000: # Formatting tech value depending on how large the number is
+                    tTS, tTR = textObjects(str('{0:g}'.format(sortedPlayers[n].technology)),buttonFontSmall,sbcolor)
+                elif sortedPlayers[n].technology < 10000:
+                    tTS, tTR = textObjects(str('{:3.2f}'.format(0.001*sortedPlayers[n].technology))+"k",buttonFontSmall,sbcolor)
+                elif sortedPlayers[n].technology < 100000:
+                    tTS, tTR = textObjects(str('{:3.1f}'.format(0.001*sortedPlayers[n].technology))+"k",buttonFontSmall,sbcolor)
+                elif sortedPlayers[n].technology < 1000000:
+                    tTS, tTR = textObjects(str('{0:g}'.format(round(0.001*sortedPlayers[n].technology)))+"k",buttonFontSmall,sbcolor)
+                else:
+                    tTS, tTR = textObjects(str('{:3.2f}'.format(0.000001*sortedPlayers[n].technology))+"M",buttonFontSmall,sbcolor)
+                tTR.topleft = (stScoreUIx+2*stScoreUIspacing+100,stScoreUIy+12*n+62)
+                screen.blit(tTS, tTR)
+                if sortedPlayers[n].resources < 1000: # Formatting tech value depending on how large the number is
+                    rTS, rTR = textObjects(str('{0:g}'.format(sortedPlayers[n].resources)),buttonFontSmall,sbcolor)
+                elif sortedPlayers[n].resources < 10000:
+                    rTS, rTR = textObjects(str('{:3.2f}'.format(0.001*sortedPlayers[n].resources))+"k",buttonFontSmall,sbcolor)
+                elif sortedPlayers[n].resources < 100000:
+                    rTS, rTR = textObjects(str('{:3.1f}'.format(0.001*sortedPlayers[n].resources))+"k",buttonFontSmall,sbcolor)
+                elif sortedPlayers[n].resources < 1000000:
+                    rTS, rTR = textObjects(str('{0:g}'.format(round(0.001*sortedPlayers[n].resources)))+"k",buttonFontSmall,sbcolor)
+                else:
+                    rTS, rTR = textObjects(str('{:3.2f}'.format(0.000001*sortedPlayers[n].resources))+"M",buttonFontSmall,sbcolor)
+                rTR.topleft = (stScoreUIx+3*stScoreUIspacing+100,stScoreUIy+12*n+62)
+                screen.blit(rTS, rTR)
+            pygame.display.flip()
+
         # Render scoreboard info text
         nTS, nTR = textObjects("Nation",buttonFontSmall,red)
         nTR.topleft = (scoreUIx,scoreUIy+50)
@@ -552,7 +765,7 @@ while True:
                                     #print("The zone has been conquered!")
                                     Players[Zones[xZone*yMap+yZone].owner].zones = Players[Zones[xZone*yMap+yZone].owner].zones - 1 # Update enemy player's zone stat
                                     if Players[Zones[xZone*yMap+yZone].owner].zones == 0: # If the other player lost all their zones
-                                        Players[Zones[xZone*yMap+yZone].owner].dead = True # They are dead
+                                        Players[Zones[xZone*yMap+yZone].owner].killPlayer(Players[1]) # Player 1 kills the AI player
                                     Zones[xZone*yMap+yZone].owner = 1 # Update the owner of the zone object
                                     Players[1].zones = Players[1].zones + 1 # Update player's zone stat
                                     Players[1].resources = Players[1].resources - 10 # Update player's resource stat
@@ -576,7 +789,7 @@ while True:
             pressedEnter = 0
             #print("Turn 1 has ended.")
             for Turn in range(2,nPlayers+1): # AI players take their turns here.
-                pygame.draw.rect(screen,black,(roundUIx,roundUIy,100,25)) # Overwrite round/turn info text
+                pygame.draw.rect(screen,black,(roundUIx,roundUIy,200,25)) # Overwrite round/turn info text
                 roundTextSurf, roundTextRect = textObjects("R"+str(Round)+"T"+str(Turn),buttonFont,red) # Round info text
                 roundTextRect.topleft = (roundUIx,roundUIy) # Center point of round info text
                 screen.blit(roundTextSurf, roundTextRect) # Render round info text
@@ -599,7 +812,7 @@ while True:
                     elif pickedZone.owner != Turn and Players[Turn].resources >= 10 and pickedZone.isAdjacent(Zones,Turn,xMap,yMap) == True: # If the zone is owned by another player than this AI
                         Players[pickedZone.owner].zones = Players[pickedZone.owner].zones - 1 # Update other player's zone stat
                         if Players[pickedZone.owner].zones == 0: # If the other player lost all their zones
-                            Players[pickedZone.owner].dead = True # They are dead
+                            Players[pickedZone.owner].killPlayer(Players[Turn]) # They get killed
                         pickedZone.owner = Turn # Change ownership of the zone
                         Players[Turn].zones = Players[Turn].zones + 1 # Update player's zone stat
                         Players[Turn].resources = Players[Turn].resources - 10 # Update player's resource stat
@@ -609,48 +822,94 @@ while True:
                     if pickedZone.owner != Turn and pickedZone.owner != 0 and pickedZone.isAdjacent(Zones,Turn,xMap,yMap) == True: # If the zone is not owned by the player or unclaimed
                         Players[pickedZone.owner].zones = Players[pickedZone.owner].zones - 1 # Update other player's zone stat
                         if Players[pickedZone.owner].zones == 0: # If the other player lost all their zones
-                            Players[pickedZone.owner].dead = True # They are dead
+                            Players[pickedZone.owner].killPlayer(Players[Turn]) # They get killed
                         pickedZone.owner = Turn # Change ownership of the zone
                         Players[Turn].zones = Players[Turn].zones + 1 # Update player's zone stat
                         Players[Turn].resources = Players[Turn].resources - 10 # Update player's resource stat
-                for xZone in range(0,xMap): # Make zone "button"
+                for xZone in range(0,xMap): # Make zone "buttons"
                     for yZone in range(0,yMap):
-                        if Zones[xZone*yMap+yZone].owner == 0: # If the zone is unclaimed
-                            squareZone("",30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,Players[1].color,white,"None")
-                        elif Zones[xZone*yMap+yZone].owner > 1: # If the zone is owned by enemy player
-                            squareZone("",30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,Players[1].color,Players[Zones[xZone*yMap+yZone].owner].color,"None")
-                        elif Zones[xZone*yMap+yZone].owner == 1: # If the zone is owned by the player
-                            squareZone("",30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,Players[1].color,Players[1].color,"None")
+                        squareZone("",30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,Players[1].color,Players[Zones[xZone*yMap+yZone].owner].color,"None")
                 pygame.display.flip()
                 if Players[Turn].dead == False: # Pause if the player isn't dead
                     time.sleep(turnDelay)
             for nPlayer in range(1,nPlayers+1): # Check if a player has won or been eliminated
                 if Players[nPlayer].zones == totZones: # If the player owns all the zones
                     if nPlayer == 1: # If the player is not an AI
-                        #print("You won!")
-                        time.sleep(3)
-                        screen_id = 3
+                        if Round > endRound: # If the player won last round
+                            button("You won!",25,693,200,50,green,green,buttonFont,5)
+                            pygame.display.flip()
+                            time.sleep(3)
+                            screen_id = 3
+                        else: # If the player wins this round
+                            endRound = Round
                     else: # If the player is an AI
-                        #print("You lost!")
-                        time.sleep(3)
                         if specMode == False:
-                            screen_id = 4
+                            if Round > endRound:
+                                button("You lost!",25,693,200,50,white,white,buttonFont,5)
+                                pygame.display.flip()
+                                time.sleep(3)
+                                screen_id = 4
+                            else:
+                                turnWait = True # Lets the player advance the last round manually
+                                endRound = Round
                         else:
-                            screen_id = 5
+                            if Round > endRound:
+                                button("Game ended",25,693,200,50,yellow,yellow,buttonFont,5)
+                                pygame.display.flip()
+                                time.sleep(3)
+                                screen_id = 5
+                            else:
+                                turnWait = True # Lets the player advance the last round manually
+                                endRound = Round
                 elif Players[nPlayer].zones == 0 and nUnclaimedZones == 0 and Players[nPlayer].deathAnnounced == False: # If the player has no zones on the map, there are no unclaimed zones and it is not dead
                     Players[nPlayer].deathAnnounced= True
                     Players[nPlayer].dead = True # Set the player to dead
                     if nPlayer != 1: # If the player is an AI
-                        print("Round "+str(Round)+": "+Players[nPlayer].nationName+" has been defeated!")
+                        #print("Round "+str(Round)+": "+Players[nPlayer].nationName+" has been defeated!")
+                        pass
                     if nPlayer == 1 and specMode == False: # If the player is not an AI
                         print("Round "+str(Round)+": You lost!")
+                    Players[nPlayer].production = 0
+                    Players[nPlayer].resources = 0
             for nPlayer in range(0,nPlayers+1): # After all turns are taken, update stats.
-                if Players[nPlayer].dead == False: # If the player is dead, skip updating their stats
+                if Players[nPlayer].dead == False: # If the player is alive
                     Players[nPlayer].production = Players[nPlayer].zones  # Update player's production stat
+                    Players[nPlayer].realProduction = 5 + Players[nPlayer].production + round(0.1*Players[nPlayer].technology) - 0.001*Players[nPlayer].resources*Players[nPlayer].resources
+                    Players[nPlayer].realIncome = 5 + Players[nPlayer].production + round(0.1*(Players[nPlayer].technology+Players[nPlayer].trade)) - 0.001*Players[nPlayer].resources*Players[nPlayer].resources
                     Players[nPlayer].resources = 5 + Players[nPlayer].production + Players[nPlayer].resources + round(0.1*(Players[nPlayer].technology+Players[nPlayer].trade) - 0.001*Players[nPlayer].resources*Players[nPlayer].resources - 0.2*Players[nPlayer].overspent) # Update player's resource stat
                     Players[nPlayer].spentOnTech = round(Players[nPlayer].techrate*Players[nPlayer].resources) # Amount spent on tech this round by the player
-                    Players[nPlayer].technology = Players[nPlayer].technology + Players[nPlayer].spentOnTech # Update player's technology stat
-                    Players[nPlayer].resources = Players[nPlayer].resources - Players[nPlayer].spentOnTech # Update the player's resource stat
+                    Players[nPlayer].technology = Players[nPlayer].technology + Players[nPlayer].spentOnTech + Players[nPlayer].techStolen # Update player's technology stat
+                    Players[nPlayer].resources = Players[nPlayer].resources - Players[nPlayer].spentOnTech + Players[nPlayer].resourcesStolen # Update the player's resource stat
+                else: # If the player is dead, set their stats to 0
+                    Players[nPlayer].zones = 0
+                    Players[nPlayer].production = 0
+                    Players[nPlayer].realProduction = 0
+                    Players[nPlayer].realIncome = 0
+                    Players[nPlayer].resources = 0
+                    Players[nPlayer].spentOnTech = 0
+                    Players[nPlayer].technology = 0
+                Players[nPlayer].techStolen = 0 # Reset stolen technology
+                Players[nPlayer].resourcesStolen = 0 # Reset stolen resources
+                zonesRecord = max([zonesRecord,Players[nPlayer].zones])
+                productionRecord = max([productionRecord,Players[nPlayer].production])
+                resourcesRecord = max([resourcesRecord,Players[nPlayer].resources])
+                technologyRecord = max([technologyRecord,Players[nPlayer].technology])
+                spentOnTechRecord = max([spentOnTechRecord,Players[nPlayer].spentOnTech])
+                tradeRecord = max([tradeRecord,Players[nPlayer].trade])
+                overspentRecord = max([overspentRecord,Players[nPlayer].overspent])
+                realProductionRecord = max([realProductionRecord,Players[nPlayer].realProduction])
+                realIncomeRecord = max([realIncomeRecord,Players[nPlayer].realIncome])
+                Players[nPlayer].roundHist.append(long(Round+1))
+                Players[nPlayer].zonesHist.append(Players[nPlayer].zones)
+                Players[nPlayer].resourcesHist.append(Players[nPlayer].resources)
+                Players[nPlayer].productionHist.append(Players[nPlayer].production)
+                Players[nPlayer].techrateHist.append(Players[nPlayer].techrate)
+                Players[nPlayer].technologyHist.append(Players[nPlayer].technology)
+                Players[nPlayer].spentOnTechHist.append(Players[nPlayer].spentOnTech)
+                Players[nPlayer].tradeHist.append(Players[nPlayer].trade)
+                Players[nPlayer].overspentHist.append(Players[nPlayer].overspent)
+                Players[nPlayer].realProductionHist.append(Players[nPlayer].realProduction)
+                Players[nPlayer].realIncomeHist.append(Players[nPlayer].realIncome)
             Round = Round + 1
             Turn = 1
 
