@@ -644,7 +644,7 @@ while True:
                     sbcolor = sortedPlayers[n].color
                 else:
                     sbcolor = gray
-                nTS, nTR = textObjects(str(sortedPlayers[n].nationName),buttonFontSmall,sbcolor)
+                nTS, nTR = textObjects(str(sortedPlayers[n].nationName),buttonFontSmall,sortedPlayers[n].color)
                 nTR.topleft = (stScoreUIx,stScoreUIy+12*n+62)
                 screen.blit(nTS, nTR)
                 zTS, zTR = textObjects(str(sortedPlayers[n].zones),buttonFontSmall,sbcolor)
@@ -704,7 +704,7 @@ while True:
                 sbcolor = sortedPlayers[n].color
             else:
                 sbcolor = gray
-            nTS, nTR = textObjects(str(sortedPlayers[n].nationName),buttonFontSmall,sbcolor)
+            nTS, nTR = textObjects(str(sortedPlayers[n].nationName),buttonFontSmall,sortedPlayers[n].color)
             nTR.topleft = (scoreUIx,scoreUIy+12*n+62)
             screen.blit(nTS, nTR)
             zTS, zTR = textObjects(str(sortedPlayers[n].zones),buttonFontSmall,sbcolor)
