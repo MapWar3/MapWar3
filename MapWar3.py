@@ -47,7 +47,7 @@ class squareZoneObj:
         self.owner = 0 # 0: Empty, 1: Player, 2+: AIs
         self.x = x
         self.y = y
-        self.terrain = "land" # Terrain types: land
+        self.terrain = "land" # Terrain types: land, water
 
     def isAdjacent(self,Zones,own,xMap,yMap):
         claimTheZone = False
@@ -808,6 +808,8 @@ while True:
         if button("Quit",250,693,200,50,red,green,buttonFont,5,"lmb") == 1: # Quit button
             pygame.quit()
             quit()
+
+        # END TURN BUTTON AND AI TURNS
         if button("End Turn",25,693,200,50,red,green,buttonFont,5,"lmb") == 1 or pressedEnter == 1 or (turnWait == False and Players[1].dead == True): # End turn button
             pressedEnter = 0
             #print("Turn 1 has ended.")
@@ -818,11 +820,12 @@ while True:
                 screen.blit(roundTextSurf, roundTextRect) # Render round info text
                 button("Processing",25,693,200,50,green,green,buttonFont,5,"None")
                 attempt = 0
+                randomZonesOrder = random.sample(range(totZones),totZones) # Generates random order of the indices for all zones
                 while Players[Turn].resources >= 5 and (nUnclaimedZones - waterZones) >= 1: # When the player has >= 5 resources and there are unclaimed zones. Problem: If the player is surrounded, this loop can be infinite!
-                    if attempt > 5*xMap*yMap: # To avoid infinite loop if the player is surrounded, it gets a max number of attempts.
+                    if attempt >= xMap*yMap:
                         break
+                    pickedZone = Zones[randomZonesOrder[attempt]]
                     attempt = attempt + 1
-                    pickedZone = random.choice(Zones)
                     if pickedZone.terrain == "water": # Ignore water zones
                         pass
                     elif pickedZone.owner == 0: # If the zone is unclaimed
@@ -842,8 +845,13 @@ while True:
                         Players[Turn].zones = Players[Turn].zones + 1 # Update player's zone stat
                         Players[Turn].resources = Players[Turn].resources - 10 # Update player's resource stat
                     nUnclaimedZones = len([t.owner for t in Zones if t.owner == 0]) # Number of unclaimed zones
+                attempt = 0
+                randomZonesOrder = random.sample(range(totZones),totZones) # Generates random order of the indices for all zones
                 while Players[Turn].resources >= 10 and Players[Turn].zones < (totZones - waterZones) and Players[Turn].dead == False: # When the player has >= 10 resources, doesn't own all zones and is alive
-                    pickedZone = random.choice(Zones)
+                    if attempt >= xMap*yMap:
+                        break
+                    pickedZone = Zones[randomZonesOrder[attempt]]
+                    attempt = attempt + 1
                     if pickedZone.terrain == "water": # Ignore water zones
                         pass
                     elif pickedZone.owner != Turn and pickedZone.owner != 0 and pickedZone.isAdjacent(Zones,Turn,xMap,yMap) == True: # If the zone is not owned by the player or unclaimed
