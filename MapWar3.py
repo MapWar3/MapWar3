@@ -47,6 +47,7 @@ class squareZoneObj:
         self.owner = 0 # 0: Empty, 1: Player, 2+: AIs
         self.x = x
         self.y = y
+        self.terrain = "land" # Terrain types: land
 
     def isAdjacent(self,Zones,own,xMap,yMap):
         claimTheZone = False
@@ -228,6 +229,7 @@ while True:
     typingNationName = True
     typingRulerName = False
     specMode = False # Spectator mode
+    waterFrac = 0.05 # Fraction of zones to be water
     zonesRecord = long(1) # Records for rendering graphs. Set to 1 to avoid div by 0 error.
     productionRecord = long(1)
     resourcesRecord = long(1)
@@ -250,6 +252,8 @@ while True:
     colorUIy = 325
     natNameUIx = 425
     natNameUIy = 325
+    waterUIx = 25
+    waterUIy = 400
     time.sleep(0.5) # Pause 0.5 s
     for event in pygame.event.get(): pass # Keyboard/mouse event queue
 
@@ -307,6 +311,20 @@ while True:
         playersTextSurf, playersTextRect = textObjects("Players: "+str(nPlayers),buttonFont,red) # Player number info text
         playersTextRect.topleft = (nPlayerUIx+225,nPlayerUIy+12) # Center point of player number info text
         screen.blit(playersTextSurf, playersTextRect) # Render player number info text
+
+        if waterFrac <= 0.14: # Cannot have too much water on map
+            if button("Water +",waterUIx,waterUIy,100,25,red,green,buttonFontSmall,2,"lmb") == 1: # Water fraction setting
+                waterFrac = waterFrac + 0.01
+                time.sleep(0.1)
+        else: button("Max Water",waterUIx,waterUIy,100,25,red,red,buttonFontSmall,2,"None")
+        if waterFrac > 0:
+            if button("Water -",waterUIx,waterUIy+25,100,25,red,green,buttonFontSmall,2,"lmb") == 1: # Water fraction setting
+                waterFrac = waterFrac - 0.01
+                time.sleep(0.1)
+        else: button("Min Water",waterUIx,waterUIy+25,100,25,red,red,buttonFontSmall,2,"None")
+        waterTextSurf, waterTextRect = textObjects("Water: "+str(int(round(100*waterFrac)))+"%",buttonFont,red) # Water fraction info text
+        waterTextRect.topleft = (waterUIx+225,waterUIy+12) # Center point of water fraction info text
+        screen.blit(waterTextSurf, waterTextRect) # Render water fraction info text
 
         if turnDelay < 4.95: # Max setting for turn delay time
             if button("Turn Delay +",delayUIx,delayUIy,100,25,red,green,buttonFontSmall,2,"lmb") == 1: # Turn delay setting
@@ -437,6 +455,7 @@ while True:
     showStats = False
     endRound = long(999999999999) # The end round of the game. Changed later during game.
     totZones = xMap*yMap # Total number of zones on map
+    waterZones = 0 # Total number of water zones on map
     zoneSize = 75
     if xMap > 8 or yMap > 8:
         zoneSize = 50
@@ -466,8 +485,6 @@ while True:
                     Players[nPlayer].nationName = "Seb Castro"
                 while Players[nPlayer].color == Players[1].color:
                     Players[nPlayer].color = pink
-        #print(Players[nPlayer].owner)
-        #print(Players[nPlayer].color)
     Players[0].dead == True # Set unclaimed player to dead
     if specMode == True: # If spectator mode was chosen, set the player to dead
         Players[1].dead = True
@@ -477,6 +494,9 @@ while True:
         for yZone in range(0,yMap):
             currZone = squareZoneObj(xZone,yZone)
             Zones.append(currZone)
+            if random.random() <= waterFrac: # If probability is smaller than this, generate a water zone
+                Zones[xZone*yMap+yZone].terrain = "water"
+                waterZones = waterZones + 1
             #print(Zones[xZone*yMap+yZone].x)
             #print(Zones[xZone*yMap+yZone].y)
             #print(Zones[xZone*yMap+yZone].owner)
@@ -737,10 +757,13 @@ while True:
                 rTS, rTR = textObjects(str('{:3.2f}'.format(0.000001*sortedPlayers[n].resources))+"M",buttonFontSmall,sbcolor)
             rTR.topleft = (scoreUIx+3*scoreUIspacing+100,scoreUIy+12*n+62)
             screen.blit(rTS, rTR)
-        
+
+        # RENDER ZONES
         for xZone in range(0,xMap): # Make zone "button"
             for yZone in range(0,yMap):
-                if Players[1].dead == False: # If the player is not dead, let it interact with the zones
+                if Zones[xZone*yMap+yZone].terrain == "water":
+                    squareZone("",30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,Players[1].color,black)
+                elif Players[1].dead == False: # If the player is not dead, let it interact with the zones
                     if Zones[xZone*yMap+yZone].owner == 0: # If the zone is unclaimed
                         if squareZone("",30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,Players[1].color,white,"claim") == 1: # If the zone is clicked
                             if Players[1].resources >= 5: # If the player can afford to claim it
@@ -795,12 +818,14 @@ while True:
                 screen.blit(roundTextSurf, roundTextRect) # Render round info text
                 button("Processing",25,693,200,50,green,green,buttonFont,5,"None")
                 attempt = 0
-                while Players[Turn].resources >= 5 and nUnclaimedZones >= 1: # When the player has >= 5 resources and there are unclaimed zones. Problem: If the player is surrounded, this loop can be infinite!
+                while Players[Turn].resources >= 5 and (nUnclaimedZones - waterZones) >= 1: # When the player has >= 5 resources and there are unclaimed zones. Problem: If the player is surrounded, this loop can be infinite!
                     if attempt > 5*xMap*yMap: # To avoid infinite loop if the player is surrounded, it gets a max number of attempts.
                         break
                     attempt = attempt + 1
                     pickedZone = random.choice(Zones)
-                    if pickedZone.owner == 0: # If the zone is unclaimed
+                    if pickedZone.terrain == "water": # Ignore water zones
+                        pass
+                    elif pickedZone.owner == 0: # If the zone is unclaimed
                         if Players[Turn].zones == 0:
                             pickedZone.owner = Turn # Change ownership of the zone
                             Players[Turn].zones = Players[Turn].zones + 1 # Update player's zone stat
@@ -817,9 +842,11 @@ while True:
                         Players[Turn].zones = Players[Turn].zones + 1 # Update player's zone stat
                         Players[Turn].resources = Players[Turn].resources - 10 # Update player's resource stat
                     nUnclaimedZones = len([t.owner for t in Zones if t.owner == 0]) # Number of unclaimed zones
-                while Players[Turn].resources >= 10 and Players[Turn].zones < totZones and Players[Turn].dead == False: # When the player has >= 10 resources, doesn't own all zones and is alive
+                while Players[Turn].resources >= 10 and Players[Turn].zones < (totZones - waterZones) and Players[Turn].dead == False: # When the player has >= 10 resources, doesn't own all zones and is alive
                     pickedZone = random.choice(Zones)
-                    if pickedZone.owner != Turn and pickedZone.owner != 0 and pickedZone.isAdjacent(Zones,Turn,xMap,yMap) == True: # If the zone is not owned by the player or unclaimed
+                    if pickedZone.terrain == "water": # Ignore water zones
+                        pass
+                    elif pickedZone.owner != Turn and pickedZone.owner != 0 and pickedZone.isAdjacent(Zones,Turn,xMap,yMap) == True: # If the zone is not owned by the player or unclaimed
                         Players[pickedZone.owner].zones = Players[pickedZone.owner].zones - 1 # Update other player's zone stat
                         if Players[pickedZone.owner].zones == 0: # If the other player lost all their zones
                             Players[pickedZone.owner].killPlayer(Players[Turn]) # They get killed
@@ -828,12 +855,15 @@ while True:
                         Players[Turn].resources = Players[Turn].resources - 10 # Update player's resource stat
                 for xZone in range(0,xMap): # Make zone "buttons"
                     for yZone in range(0,yMap):
-                        squareZone("",30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,Players[1].color,Players[Zones[xZone*yMap+yZone].owner].color,"None")
+                        if Zones[xZone*yMap+yZone].terrain == "water":
+                            squareZone("",30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,Players[1].color,black)
+                        else:
+                            squareZone("",30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,Players[1].color,Players[Zones[xZone*yMap+yZone].owner].color,"None")
                 pygame.display.flip()
                 if Players[Turn].dead == False: # Pause if the player isn't dead
                     time.sleep(turnDelay)
             for nPlayer in range(1,nPlayers+1): # Check if a player has won or been eliminated
-                if Players[nPlayer].zones == totZones: # If the player owns all the zones
+                if Players[nPlayer].zones == totZones - waterZones: # If the player owns all the zones
                     if nPlayer == 1: # If the player is not an AI
                         if Round > endRound: # If the player won last round
                             button("You won!",25,693,200,50,green,green,buttonFont,5)
@@ -861,7 +891,7 @@ while True:
                             else:
                                 turnWait = True # Lets the player advance the last round manually
                                 endRound = Round
-                elif Players[nPlayer].zones == 0 and nUnclaimedZones == 0 and Players[nPlayer].deathAnnounced == False: # If the player has no zones on the map, there are no unclaimed zones and it is not dead
+                elif Players[nPlayer].zones == 0 and (nUnclaimedZones - waterZones) == 0 and Players[nPlayer].deathAnnounced == False: # If the player has no zones on the map, there are no unclaimed zones and it is not dead
                     Players[nPlayer].deathAnnounced= True
                     Players[nPlayer].dead = True # Set the player to dead
                     if nPlayer != 1: # If the player is an AI
