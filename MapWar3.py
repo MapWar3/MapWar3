@@ -34,7 +34,7 @@ darkcyan = (0,128,96)
 darkpurple = (96,0,128)
 plum = (128,0,64)
 playerColors = [white,pink,red,orange,yellow,green,cyan,brightblue,blue,purple,magenta,darkred,brown,spring,darkgreen,darkcyan,darkpurple,plum]
-nationNames = ["Unclaimed","Kolsebistan","Blaist Blaland","Darvincia","Ethanthova","Auspikitan","Solea","Aeridani","Bielosia","Lyintaria","Czallisto","Bongatar","Dotruga","Aahrus","Kaeshar","Kaktoland","Quontia","Ampluterra"]
+nationNames = ["Unclaimed","Kolsebistan","Blaist Blaland","Solea","Bongatar","Auspikitan","Darvincia","Ethanthova","Aeridani","Lyintaria","Czallisto","Bielosia","Dotruga","Aahrus","Kaeshar","Kaktoland","Quontia","Ampluterra"]
 rulerNames = ["Missingno","Seb Castro","Bla","Kalassak","Darvince","Matthias","Fiah","vh","Blotz","Tuto","Yqt","Naru","TheMooCows","Jorster","Quontex","Mikkel Sikkel","Stowaway","Mudkipz"]
 
 # Font definitions
