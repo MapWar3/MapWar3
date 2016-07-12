@@ -867,12 +867,11 @@ while True:
                                         Players[1].zones = Players[1].zones + 1 # Update player's zone stat
                                         Players[1].production = Players[1].production + 1 # Update player's production stat
                                         Players[1].resources = Players[1].resources - 5 # Update player's resource stat
-                                    else:
-                                        print("The zones are not adjacent!")
-                                else:
-                                    print("You do not have enough resources to claim the zone!")
+                                    else: print("The zones are not adjacent!")
+                                else: print("You do not have enough resources to claim the zone!")
+                                time.sleep(0.05)
                             if Zones[xZone*yMap+yZone].infrastructure == "extractor":
-                                extractor(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,white,Zones[xZone*yMap+yZone],"claim")
+                                extractor(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,white,Zones[xZone*yMap+yZone])
 # Unclaimed water zones
                         elif Zones[xZone*yMap+yZone].terrain == "water":
                             squareZone(30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,gray,black)
@@ -890,10 +889,9 @@ while True:
                                         Players[1].zones = Players[1].zones + 1 # Update player's zone stat
                                         Players[1].production = Players[1].production + 1 # Update player's production stat
                                         Players[1].resources = Players[1].resources - 5 # Update player's resource stat
-                                    else:
-                                        print("The zones are not adjacent!")
-                                else:
-                                    print("You do not have enough resources to claim the zone!")
+                                    else: print("The zones are not adjacent!")
+                                else: print("You do not have enough resources to claim the zone!")
+                                time.sleep(0.05)
                     elif Zones[xZone*yMap+yZone].owner > 1: # If the zone is owned by enemy player
 # Enemy land zones
                         if Zones[xZone*yMap+yZone].terrain == "land":
@@ -912,12 +910,9 @@ while True:
                                         Players[1].zones = Players[1].zones + 1 # Update player's zone stat
                                         Players[1].production = Players[1].production + 1 # Update player's zone stat
                                         Players[1].resources = Players[1].resources - 10 # Update player's resource stat
-                                    else:
-                                        pass
-                                        #print("The zones are not adjacent!")
-                                else:
-                                    pass
-                                    #print("You do not have enough resources to claim the zone!")
+                                    else: print("The zones are not adjacent!")
+                                else: print("You do not have enough resources to claim the zone!")
+                                time.sleep(0.05)
                             if Zones[xZone*yMap+yZone].infrastructure == "extractor":
                                 if Zones[xZone*yMap+yZone].extractor == 0: extFillColor = white # Color undeveloped extractors white
                                 else: extFillColor = Players[Zones[xZone*yMap+yZone].owner].color # Color upgraded extractors the player's color
@@ -937,12 +932,9 @@ while True:
                                         Players[1].zones = Players[1].zones + 1 # Update player's zone stat
                                         Players[1].production = Players[1].production + 1 # Update player's production stat
                                         Players[1].resources = Players[1].resources - 10 # Update player's resource stat
-                                    else:
-                                        pass
-                                        #print("The zones are not adjacent!")
-                                else:
-                                    pass
-                                    #print("You do not have enough resources to claim the zone!")
+                                    else: print("The zones are not adjacent!")
+                                else: print("You do not have enough resources to claim the zone!")
+                                time.sleep(0.05)
 # Player zones (upgrading)
                     elif Zones[xZone*yMap+yZone].owner == 1: # If the zone is owned by the player
                         if Zones[xZone*yMap+yZone].terrain == "land":
@@ -957,6 +949,10 @@ while True:
                                         Players[1].resources = Players[1].resources - Zones[xZone*yMap+yZone].extractorCost[Zones[xZone*yMap+yZone].extractor] # Pay the cost of upgrading
                                         Zones[xZone*yMap+yZone].extractor = Zones[xZone*yMap+yZone].extractor + 1 # Extractor gains a level
                                         Players[1].production = Players[1].production + Zones[xZone*yMap+yZone].extractorProduction[Zones[xZone*yMap+yZone].extractor] # The player gains the production bonus
+                                    elif Players[1].technology < Zones[xZone*yMap+yZone].extractorTechnology[Zones[xZone*yMap+yZone].extractor]:
+                                        print("You need "+str(Zones[xZone*yMap+yZone].extractorTechnology[Zones[xZone*yMap+yZone].extractor])+" technology to develop the extractor!")
+                                    else: print("You need "+str(Zones[xZone*yMap+yZone].extractorCost[Zones[xZone*yMap+yZone].extractor])+" resources to develop the extractor!")
+                                    time.sleep(0.05)
                         if Zones[xZone*yMap+yZone].terrain == "water":
                             squareZone(30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,gray,black)
                             seabase(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,Players[1].color) # Show sea base
