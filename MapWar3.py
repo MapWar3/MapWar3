@@ -14,6 +14,7 @@ tpsMax = 30 # Max tps
 
 # Color definitions
 white = (255,255,255)
+citygray = (200,200,200)
 gray = (128,128,128)
 black = (0,0,0)
 red = (255,0,0)
@@ -57,6 +58,12 @@ class squareZoneObj:
         self.extractorTechnology = [4,20,80,400,999999999999] # Tech required to upgrade extractor level
         self.extractorProduction = [0,4,10,25,40,0] # Production gained from extractor level
         self.extractorProductionTot = [0,4,14,39,79,79] # Total extractor production
+        self.city = 0 # Level of city.
+        self.cityCost = [4,7,13,25,55,125,999999999999] # Upgrade cost of city levels
+        self.cityConquestCost = [10,15,40,65,125,250,999999999999] # Conquest cost of city at this level
+        self.cityTechnology = [0,2,8,32,128,512,999999999999] # Tech required to upgrade city level
+        self.cityProduction = [0,1,2,4,8,16,32] # Production gained from city level
+        self.cityProductionTot = [0,1,3,7,15,31,63] # Total city production
 
     def isAdjacent(self,Zones,own,xMap,yMap):
         claimTheZone = False
@@ -198,6 +205,27 @@ def extractor(x,y,w,h,ac,fc,zone,action=None): # Extractor function: Position (x
         textRect.center = (x+w/2,y+h/2) # Center point of button
         screen.blit(textSurf, textRect) # Render button text
 
+def city(x,y,w,h,ac,fc,zone,action=None): # City function: Position (x,y), width, height, highlight color, fill color, action
+    mousePos = pygame.mouse.get_pos() # (x,y) of cursor relative to top left of display
+    mouseClick = pygame.mouse.get_pressed() # (l,c,r), 0 or 1 for left, center or right mouse button clicked
+    if x+w > mousePos[0] > x and y+h > mousePos[1] > y: # Mouse is over button
+        pygame.draw.rect(screen,ac,(x,y,w,h))
+        pygame.draw.rect(screen,citygray,(x+1,y+1,w-2,h-2))
+        pygame.draw.rect(screen,ac,(x+3,y+3,w-6,h-6))
+        pygame.draw.rect(screen,fc,(x+4,y+4,w-8,h-8))
+        if mouseClick[0] ==  1 and action != None:
+            if action == "claim":
+                return 1
+    else: # Mouse is not over button
+        pygame.draw.rect(screen,gray,(x,y,w,h))
+        pygame.draw.rect(screen,citygray,(x+1,y+1,w-2,h-2))
+        pygame.draw.rect(screen,gray,(x+3,y+3,w-6,h-6))
+        pygame.draw.rect(screen,fc,(x+4,y+4,w-8,h-8))
+    if zone.city > 0:
+        textSurf, textRect = textObjects(str(zone.city),buttonFontSmall,black) # Button text
+        textRect.center = (x+w/2,y+h/2) # Center point of button
+        screen.blit(textSurf, textRect) # Render button text
+
 screen_id = 0 # Enables us to have an intro screen.
 intro = pygame.image.load("menuPic.png").convert() # Intro screen image.
 while True:
@@ -276,7 +304,8 @@ while True:
     typingRulerName = False
     specMode = False # Spectator mode
     waterFrac = 0.2 # Fraction of zones to be water
-    richlandFrac = 0.05 # Fraction of land zones to be richland
+    richlandFrac = 0.05 # Fraction of land zones to have extractors
+    urbanlandFrac = 0.5 # Fraction of land zones to have cities
     zonesRecord = long(1) # Records for rendering graphs. Set to 1 to avoid div by 0 error.
     productionRecord = long(1)
     resourcesRecord = long(1)
@@ -535,9 +564,11 @@ while True:
             if random.random() <= waterFrac and totZones - waterZones > nPlayers: # Generate a water zone
                 Zones[xZone*yMap+yZone].terrain = "water"
                 waterZones = waterZones + 1
-            elif random.random() <= richlandFrac: # Generate a richland zone (for extractors)
+            elif random.random() <= richlandFrac: # Generate a zone for extractors
                 Zones[xZone*yMap+yZone].infrastructure = "extractor"
                 pass
+            elif random.random() <= urbanlandFrac: # Generate a zone for cities
+                Zones[xZone*yMap+yZone].infrastructure = "city"
     nUnclaimedZones = len([t.owner for t in Zones if t.owner == 0]) # Number of unclaimed zones
     pickedTechrate = Players[nPlayer].techrate # Tech rate variable for button
     time.sleep(0.5)
@@ -872,6 +903,8 @@ while True:
                                 time.sleep(0.05)
                             if Zones[xZone*yMap+yZone].infrastructure == "extractor":
                                 extractor(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,white,Zones[xZone*yMap+yZone])
+                            if Zones[xZone*yMap+yZone].infrastructure == "city":
+                                city(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,white,Zones[xZone*yMap+yZone])
 # Unclaimed water zones
                         elif Zones[xZone*yMap+yZone].terrain == "water":
                             squareZone(30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,gray,black)
@@ -904,6 +937,10 @@ while True:
                                             Players[Zones[xZone*yMap+yZone].owner].production = Players[Zones[xZone*yMap+yZone].owner].production - Zones[xZone*yMap+yZone].extractorProductionTot[Zones[xZone*yMap+yZone].extractor] # The enemy loses the production bonus
                                             Zones[xZone*yMap+yZone].extractor = Zones[xZone*yMap+yZone].extractor - 1 # The extractor loses a level
                                             Players[1].production = Players[1].production + Zones[xZone*yMap+yZone].extractorProductionTot[Zones[xZone*yMap+yZone].extractor] # The player gains the production bonus
+                                        elif Zones[xZone*yMap+yZone].city > 0: # If the zone has a city
+                                            Players[Zones[xZone*yMap+yZone].owner].production = Players[Zones[xZone*yMap+yZone].owner].production - Zones[xZone*yMap+yZone].cityProductionTot[Zones[xZone*yMap+yZone].city] # The enemy loses the production bonus
+                                            Zones[xZone*yMap+yZone].city = Zones[xZone*yMap+yZone].city - 1 # The city loses a level
+                                            Players[1].production = Players[1].production + Zones[xZone*yMap+yZone].cityProductionTot[Zones[xZone*yMap+yZone].city] # The player gains the production bonus
                                         if Players[Zones[xZone*yMap+yZone].owner].zones == 0: # If the other player lost all their zones
                                             Players[Zones[xZone*yMap+yZone].owner].killPlayer(Players[1]) # Player 1 kills the AI player
                                         Zones[xZone*yMap+yZone].owner = 1 # Update the owner of the zone object
@@ -917,6 +954,10 @@ while True:
                                 if Zones[xZone*yMap+yZone].extractor == 0: extFillColor = white # Color undeveloped extractors white
                                 else: extFillColor = Players[Zones[xZone*yMap+yZone].owner].color # Color upgraded extractors the player's color
                                 extractor(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,extFillColor,Zones[xZone*yMap+yZone]) # Show extractor
+                            if Zones[xZone*yMap+yZone].infrastructure == "city":
+                                if Zones[xZone*yMap+yZone].city == 0: cityFillColor = white # Color undeveloped cities white
+                                else: cityFillColor = Players[Zones[xZone*yMap+yZone].owner].color # Color upgraded cities the player's color
+                                city(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,cityFillColor,Zones[xZone*yMap+yZone]) # Show city
 # Enemy water zones
                         elif Zones[xZone*yMap+yZone].terrain == "water":
                             squareZone(30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,gray,black)
@@ -953,6 +994,18 @@ while True:
                                         print("You need "+str(Zones[xZone*yMap+yZone].extractorTechnology[Zones[xZone*yMap+yZone].extractor])+" technology to develop the extractor!")
                                     else: print("You need "+str(Zones[xZone*yMap+yZone].extractorCost[Zones[xZone*yMap+yZone].extractor])+" resources to develop the extractor!")
                                     time.sleep(0.05)
+                            if Zones[xZone*yMap+yZone].infrastructure == "city":
+                                if Zones[xZone*yMap+yZone].city == 0: cityFillColor = white # Color undeveloped extractors white
+                                else: cityFillColor = Players[1].color # Color upgraded extractors the player's color
+                                if city(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,cityFillColor,Zones[xZone*yMap+yZone],"claim") == 1: # If the city is clicked
+                                    if Players[1].resources >= Zones[xZone*yMap+yZone].cityCost[Zones[xZone*yMap+yZone].city] and Players[1].technology >= Zones[xZone*yMap+yZone].cityTechnology[Zones[xZone*yMap+yZone].city]: # If the player can afford to upgrade the city
+                                        Players[1].resources = Players[1].resources - Zones[xZone*yMap+yZone].cityCost[Zones[xZone*yMap+yZone].city] # Pay the cost of upgrading
+                                        Zones[xZone*yMap+yZone].city = Zones[xZone*yMap+yZone].city + 1 # City gains a level
+                                        Players[1].production = Players[1].production + Zones[xZone*yMap+yZone].cityProduction[Zones[xZone*yMap+yZone].city] # The player gains the production bonus
+                                    elif Players[1].technology < Zones[xZone*yMap+yZone].cityTechnology[Zones[xZone*yMap+yZone].city]:
+                                        print("You need "+str(Zones[xZone*yMap+yZone].cityTechnology[Zones[xZone*yMap+yZone].city])+" technology to develop the city!")
+                                    else: print("You need "+str(Zones[xZone*yMap+yZone].cityCost[Zones[xZone*yMap+yZone].city])+" resources to develop the city!")
+                                    time.sleep(0.05)
                         if Zones[xZone*yMap+yZone].terrain == "water":
                             squareZone(30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,gray,black)
                             seabase(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,Players[1].color) # Show sea base
@@ -964,6 +1017,10 @@ while True:
                             if Zones[xZone*yMap+yZone].extractor == 0: extFillColor = white # Color undeveloped extractors white
                             else: extFillColor = Players[Zones[xZone*yMap+yZone].owner].color # Color upgraded extractors the player's color
                             extractor(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,extFillColor,Zones[xZone*yMap+yZone]) # Show extractor
+                        if Zones[xZone*yMap+yZone].infrastructure == "city":
+                            if Zones[xZone*yMap+yZone].city == 0: cityFillColor = white # Color undeveloped cities white
+                            else: cityFillColor = Players[Zones[xZone*yMap+yZone].owner].color # Color upgraded cities the player's color
+                            city(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,cityFillColor,Zones[xZone*yMap+yZone]) # Show extractor
                     elif Zones[xZone*yMap+yZone].terrain == "water":
                         squareZone(30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,Players[1].color,black)
                         seabase(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,Players[Zones[xZone*yMap+yZone].owner].color)
@@ -1008,10 +1065,16 @@ while True:
                                 pickedZone.seabase = 1
 # AI: Own zones (upgrading)
                     if pickedZone.owner == Turn:
-                        if Players[Turn].resources >= pickedZone.extractorCost[pickedZone.extractor] and Players[Turn].technology >= pickedZone.extractorTechnology[pickedZone.extractor]: # If the player can afford to upgrade the extractor
-                            Players[Turn].resources = Players[Turn].resources - pickedZone.extractorCost[pickedZone.extractor] # Pay the cost of upgrading
-                            pickedZone.extractor = pickedZone.extractor + 1 # Extractor gains a level
-                            Players[Turn].production = Players[Turn].production + pickedZone.extractorProduction[pickedZone.extractor] # The player gains the production bonus
+                        if pickedZone.infrastructure == "extractor":
+                            if Players[Turn].resources >= pickedZone.extractorCost[pickedZone.extractor] and Players[Turn].technology >= pickedZone.extractorTechnology[pickedZone.extractor]: # If the player can upgrade the extractor
+                                Players[Turn].resources = Players[Turn].resources - pickedZone.extractorCost[pickedZone.extractor] # Pay the cost of upgrading
+                                pickedZone.extractor = pickedZone.extractor + 1 # Extractor gains a level
+                                Players[Turn].production = Players[Turn].production + pickedZone.extractorProduction[pickedZone.extractor] # The player gains the production bonus
+                        elif pickedZone.infrastructure == "city":
+                            if Players[Turn].resources >= pickedZone.cityCost[pickedZone.city] and Players[Turn].technology >= pickedZone.cityTechnology[pickedZone.city]: # If the player can upgrade the city
+                                Players[Turn].resources = Players[Turn].resources - pickedZone.cityCost[pickedZone.city] # Pay the cost of upgrading
+                                pickedZone.city = pickedZone.city + 1 # City gains a level
+                                Players[Turn].production = Players[Turn].production + pickedZone.cityProduction[pickedZone.city] # The player gains the production bonus
 # AI: Enemy zones
                     elif pickedZone.owner != Turn and Players[Turn].resources >= 10 and pickedZone.isAdjacent(Zones,Turn,xMap,yMap) == True: # If the zone is owned by another player than this AI
                         Players[pickedZone.owner].zones = Players[pickedZone.owner].zones - 1 # Update other player's zone stat
@@ -1020,6 +1083,10 @@ while True:
                             Players[pickedZone.owner].production = Players[pickedZone.owner].production - pickedZone.extractorProductionTot[pickedZone.extractor] # The enemy loses the production bonus
                             pickedZone.extractor = pickedZone.extractor - 1 # The extractor loses a level
                             Players[Turn].production = Players[Turn].production + pickedZone.extractorProductionTot[pickedZone.extractor] # The player gains the production bonus
+                        elif pickedZone.city > 0: # If the zone has a city
+                            Players[pickedZone.owner].production = Players[pickedZone.owner].production - pickedZone.cityProductionTot[pickedZone.city] # The enemy loses the production bonus
+                            pickedZone.city = pickedZone.city - 1 # The extractor loses a level
+                            Players[Turn].production = Players[Turn].production + pickedZone.cityProductionTot[pickedZone.city] # The player gains the production bonus
                         if Players[pickedZone.owner].zones == 0: # If the other player lost all their zones
                             Players[pickedZone.owner].killPlayer(Players[Turn]) # They get killed
                         pickedZone.owner = Turn # Change ownership of the zone
@@ -1036,10 +1103,16 @@ while True:
                     pickedZone = Zones[randomZonesOrder[attempt]]
                     attempt = attempt + 1
                     if pickedZone.owner == Turn: # AI: Own zones (upgrading)
-                        if Players[Turn].resources >= pickedZone.extractorCost[pickedZone.extractor] and Players[Turn].technology >= pickedZone.extractorTechnology[pickedZone.extractor]: # If the player can afford to upgrade the extractor
-                            Players[Turn].resources = Players[Turn].resources - pickedZone.extractorCost[pickedZone.extractor] # Pay the cost of upgrading
-                            pickedZone.extractor = pickedZone.extractor + 1 # Extractor gains a level
-                            Players[Turn].production = Players[Turn].production + pickedZone.extractorProduction[pickedZone.extractor] # The player gains the production bonus
+                        if pickedZone.infrastructure == "extractor":
+                            if Players[Turn].resources >= pickedZone.extractorCost[pickedZone.extractor] and Players[Turn].technology >= pickedZone.extractorTechnology[pickedZone.extractor]: # If the player can afford to upgrade the extractor
+                                Players[Turn].resources = Players[Turn].resources - pickedZone.extractorCost[pickedZone.extractor] # Pay the cost of upgrading
+                                pickedZone.extractor = pickedZone.extractor + 1 # Extractor gains a level
+                                Players[Turn].production = Players[Turn].production + pickedZone.extractorProduction[pickedZone.extractor] # The player gains the production bonus
+                        elif pickedZone.infrastructure == "city":
+                            if Players[Turn].resources >= pickedZone.cityCost[pickedZone.city] and Players[Turn].technology >= pickedZone.cityTechnology[pickedZone.city]: # If the player can afford to upgrade the city
+                                Players[Turn].resources = Players[Turn].resources - pickedZone.cityCost[pickedZone.city] # Pay the cost of upgrading
+                                pickedZone.city = pickedZone.city + 1 # City gains a level
+                                Players[Turn].production = Players[Turn].production + pickedZone.cityProduction[pickedZone.city] # The player gains the production bonus
                     elif pickedZone.owner != 0 and pickedZone.isAdjacent(Zones,Turn,xMap,yMap) == True: # If the zone is not owned by the player and is adjacent
                         Players[pickedZone.owner].zones = Players[pickedZone.owner].zones - 1 # Update other player's zone stat
                         Players[pickedZone.owner].production = Players[pickedZone.owner].production - 1 # Update other player's production stat
@@ -1047,6 +1120,10 @@ while True:
                             Players[pickedZone.owner].production = Players[pickedZone.owner].production - pickedZone.extractorProductionTot[pickedZone.extractor] # The enemy loses the production bonus
                             pickedZone.extractor = pickedZone.extractor - 1 # The extractor loses a level
                             Players[Turn].production = Players[Turn].production + pickedZone.extractorProductionTot[pickedZone.extractor] # The player gains the production bonus
+                        elif pickedZone.city > 0: # If the zone has a city
+                            Players[pickedZone.owner].production = Players[pickedZone.owner].production - pickedZone.cityProductionTot[pickedZone.city] # The enemy loses the production bonus
+                            pickedZone.city = pickedZone.city - 1 # The city loses a level
+                            Players[Turn].production = Players[Turn].production + pickedZone.cityProductionTot[pickedZone.city] # The player gains the production bonus
                         if Players[pickedZone.owner].zones == 0: # If the other player lost all their zones
                             Players[pickedZone.owner].killPlayer(Players[Turn]) # They get killed
                         pickedZone.owner = Turn # Change ownership of the zone
@@ -1062,6 +1139,10 @@ while True:
                                 if Zones[xZone*yMap+yZone].extractor == 0: extFillColor = white # Color undeveloped extractors white
                                 else: extFillColor = Players[Zones[xZone*yMap+yZone].owner].color # Color upgraded extractors the player's color
                                 extractor(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,extFillColor,Zones[xZone*yMap+yZone])
+                            if Zones[xZone*yMap+yZone].infrastructure == "city":
+                                if Zones[xZone*yMap+yZone].city == 0: cityFillColor = white # Color undeveloped cities white
+                                else: cityFillColor = Players[Zones[xZone*yMap+yZone].owner].color # Color upgraded extractors the player's color
+                                city(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,cityFillColor,Zones[xZone*yMap+yZone])
                         elif Zones[xZone*yMap+yZone].terrain == "water":
                             squareZone(30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,Players[1].color,black)
                             seabase(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,Players[Zones[xZone*yMap+yZone].owner].color)
@@ -1121,6 +1202,8 @@ while True:
                     for zone in range(0,totZones): # Counts production from infrastructure
                         if Zones[zone].infrastructure == "extractor" and Zones[zone].owner == nPlayer:
                             Players[nPlayer].production = Players[nPlayer].production + Zones[zone].extractorProductionTot[Zones[zone].extractor]
+                        elif Zones[zone].infrastructure == "city" and Zones[zone].owner == nPlayer:
+                            Players[nPlayer].production = Players[nPlayer].production + Zones[zone].cityProductionTot[Zones[zone].city]
                     Players[nPlayer].realProduction = 5 + Players[nPlayer].production + round(0.1*Players[nPlayer].technology) - 0.001*Players[nPlayer].resources*Players[nPlayer].resources
                     Players[nPlayer].realIncome = 5 + Players[nPlayer].production + round(0.1*(Players[nPlayer].technology+Players[nPlayer].trade)) - 0.001*Players[nPlayer].resources*Players[nPlayer].resources
                     Players[nPlayer].resources = max([0 , 5 + Players[nPlayer].production + Players[nPlayer].resources + round(0.1*(Players[nPlayer].technology+Players[nPlayer].trade) - 0.001*Players[nPlayer].resources*Players[nPlayer].resources - 0.2*Players[nPlayer].overspent)]) # Update player's resource stat
