@@ -929,10 +929,11 @@ while True:
 # Enemy land zones
                         if Zones[xZone*yMap+yZone].terrain == "land":
                             if squareZone(30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,Players[1].color,Players[Zones[xZone*yMap+yZone].owner].color,"claim") == 1: # If the zone is clicked
-                                if Players[1].resources >= 10:
+                                if Players[1].resources >= Zones[xZone*yMap+yZone].cityConquestCost[Zones[xZone*yMap+yZone].city]: # If player has enough resources to conquer city
                                     if Zones[xZone*yMap+yZone].isAdjacent(Zones,1,xMap,yMap) == True:
                                         Players[Zones[xZone*yMap+yZone].owner].zones = Players[Zones[xZone*yMap+yZone].owner].zones - 1 # Update enemy player's zone stat
                                         Players[Zones[xZone*yMap+yZone].owner].production = Players[Zones[xZone*yMap+yZone].owner].production - 1 # Update enemy player's production stat
+                                        prevCity = Zones[xZone*yMap+yZone].city # Previous level of zone city
                                         if Zones[xZone*yMap+yZone].extractor > 0: # If the zone has an extractor
                                             Players[Zones[xZone*yMap+yZone].owner].production = Players[Zones[xZone*yMap+yZone].owner].production - Zones[xZone*yMap+yZone].extractorProductionTot[Zones[xZone*yMap+yZone].extractor] # The enemy loses the production bonus
                                             Zones[xZone*yMap+yZone].extractor = Zones[xZone*yMap+yZone].extractor - 1 # The extractor loses a level
@@ -946,7 +947,7 @@ while True:
                                         Zones[xZone*yMap+yZone].owner = 1 # Update the owner of the zone object
                                         Players[1].zones = Players[1].zones + 1 # Update player's zone stat
                                         Players[1].production = Players[1].production + 1 # Update player's zone stat
-                                        Players[1].resources = Players[1].resources - 10 # Update player's resource stat
+                                        Players[1].resources = Players[1].resources - Zones[xZone*yMap+yZone].cityConquestCost[prevCity] # Update player's resource stat
                                     else: print("The zones are not adjacent!")
                                 else: print("You do not have enough resources to claim the zone!")
                                 time.sleep(0.05)
@@ -1076,7 +1077,8 @@ while True:
                                 pickedZone.city = pickedZone.city + 1 # City gains a level
                                 Players[Turn].production = Players[Turn].production + pickedZone.cityProduction[pickedZone.city] # The player gains the production bonus
 # AI: Enemy zones
-                    elif pickedZone.owner != Turn and Players[Turn].resources >= 10 and pickedZone.isAdjacent(Zones,Turn,xMap,yMap) == True: # If the zone is owned by another player than this AI
+                    elif pickedZone.owner != Turn and Players[Turn].resources >= pickedZone.cityConquestCost[pickedZone.city] and pickedZone.isAdjacent(Zones,Turn,xMap,yMap) == True: # If the zone is owned by another player than this AI
+                        prevCity = pickedZone.city # Previous level of zone city
                         Players[pickedZone.owner].zones = Players[pickedZone.owner].zones - 1 # Update other player's zone stat
                         Players[pickedZone.owner].production = Players[pickedZone.owner].production - 1 # Update other player's production stat
                         if pickedZone.extractor > 0: # If the zone has an extractor
@@ -1085,14 +1087,14 @@ while True:
                             Players[Turn].production = Players[Turn].production + pickedZone.extractorProductionTot[pickedZone.extractor] # The player gains the production bonus
                         elif pickedZone.city > 0: # If the zone has a city
                             Players[pickedZone.owner].production = Players[pickedZone.owner].production - pickedZone.cityProductionTot[pickedZone.city] # The enemy loses the production bonus
-                            pickedZone.city = pickedZone.city - 1 # The extractor loses a level
+                            pickedZone.city = pickedZone.city - 1 # The city loses a level
                             Players[Turn].production = Players[Turn].production + pickedZone.cityProductionTot[pickedZone.city] # The player gains the production bonus
                         if Players[pickedZone.owner].zones == 0: # If the other player lost all their zones
                             Players[pickedZone.owner].killPlayer(Players[Turn]) # They get killed
                         pickedZone.owner = Turn # Change ownership of the zone
                         Players[Turn].zones = Players[Turn].zones + 1 # Update player's zone stat
                         Players[Turn].production = Players[Turn].production + 1 # Update player's production stat
-                        Players[Turn].resources = Players[Turn].resources - 10 # Update player's resource stat
+                        Players[Turn].resources = Players[Turn].resources - pickedZone.cityConquestCost[prevCity] # Update player's resource stat
                     nUnclaimedZones = len([t.owner for t in Zones if t.owner == 0]) # Number of unclaimed zones
 # AI: Late game/full map
                 attempt = 0
