@@ -60,10 +60,14 @@ class squareZoneObj:
         self.extractorProductionTot = [0,4,14,39,79,79] # Total extractor production
         self.city = 0 # Level of city.
         self.cityCost = [4,7,13,25,55,125,999999999999] # Upgrade cost of city levels
-        self.cityConquestCost = [10,15,40,65,125,250,999999999999] # Conquest cost of city at this level
+        self.cityConquestCost = [10,15,25,40,65,125,250,999999999999] # Conquest cost of city at this level
         self.cityTechnology = [0,2,8,32,128,512,999999999999] # Tech required to upgrade city level
         self.cityProduction = [0,1,2,4,8,16,32] # Production gained from city level
         self.cityProductionTot = [0,1,3,7,15,31,63] # Total city production
+        self.milbase = 0 # Level of military base.
+        self.milbaseCost = [5,15,25,50,999999999999] # Upgrade cost of military base levels
+        self.milbaseConquestCost = [10,25,75,165,365,999999999999] # Conquest cost of military base at this level
+        self.milbaseTechnology = [3,12,60,360,999999999999] # Tech required to upgrade military base level
 
     def isAdjacent(self,Zones,own,xMap,yMap):
         claimTheZone = False
@@ -226,6 +230,27 @@ def city(x,y,w,h,ac,fc,zone,action=None): # City function: Position (x,y), width
         textRect.center = (x+w/2,y+h/2) # Center point of button
         screen.blit(textSurf, textRect) # Render button text
 
+def milbase(x,y,w,h,ac,fc,zone,action=None): # Military base function: Position (x,y), width, height, highlight color, fill color, action
+    mousePos = pygame.mouse.get_pos() # (x,y) of cursor relative to top left of display
+    mouseClick = pygame.mouse.get_pressed() # (l,c,r), 0 or 1 for left, center or right mouse button clicked
+    if x+w > mousePos[0] > x and y+h > mousePos[1] > y: # Mouse is over button
+        pygame.draw.rect(screen,ac,(x,y,w,h))
+        pygame.draw.rect(screen,red,(x+1,y+1,w-2,h-2))
+        pygame.draw.rect(screen,ac,(x+3,y+3,w-6,h-6))
+        pygame.draw.rect(screen,fc,(x+4,y+4,w-8,h-8))
+        if mouseClick[0] ==  1 and action != None:
+            if action == "claim":
+                return 1
+    else: # Mouse is not over button
+        pygame.draw.rect(screen,gray,(x,y,w,h))
+        pygame.draw.rect(screen,red,(x+1,y+1,w-2,h-2))
+        pygame.draw.rect(screen,gray,(x+3,y+3,w-6,h-6))
+        pygame.draw.rect(screen,fc,(x+4,y+4,w-8,h-8))
+    if zone.milbase > 0:
+        textSurf, textRect = textObjects(str(zone.milbase),buttonFontSmall,black) # Button text
+        textRect.center = (x+w/2,y+h/2) # Center point of button
+        screen.blit(textSurf, textRect) # Render button text
+
 screen_id = 0 # Enables us to have an intro screen.
 intro = pygame.image.load("menuPic.png").convert() # Intro screen image.
 while True:
@@ -305,7 +330,8 @@ while True:
     specMode = False # Spectator mode
     waterFrac = 0.2 # Fraction of zones to be water
     richlandFrac = 0.05 # Fraction of land zones to have extractors
-    urbanlandFrac = 0.5 # Fraction of land zones to have cities
+    urbanlandFrac = 0.45 # Fraction of land zones to have cities
+    militarylandFrac = 0.1 # Fraction of land zones to have military bases
     zonesRecord = long(1) # Records for rendering graphs. Set to 1 to avoid div by 0 error.
     productionRecord = long(1)
     resourcesRecord = long(1)
@@ -566,6 +592,9 @@ while True:
                 waterZones = waterZones + 1
             elif random.random() <= richlandFrac: # Generate a zone for extractors
                 Zones[xZone*yMap+yZone].infrastructure = "extractor"
+                pass
+            elif random.random() <= militarylandFrac: # Generate a zone for military bases
+                Zones[xZone*yMap+yZone].infrastructure = "milbase"
                 pass
             elif random.random() <= urbanlandFrac: # Generate a zone for cities
                 Zones[xZone*yMap+yZone].infrastructure = "city"
@@ -903,6 +932,8 @@ while True:
                                 time.sleep(0.05)
                             if Zones[xZone*yMap+yZone].infrastructure == "extractor":
                                 extractor(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,white,Zones[xZone*yMap+yZone])
+                            if Zones[xZone*yMap+yZone].infrastructure == "milbase":
+                                milbase(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,white,Zones[xZone*yMap+yZone])
                             if Zones[xZone*yMap+yZone].infrastructure == "city":
                                 city(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,white,Zones[xZone*yMap+yZone])
 # Unclaimed water zones
@@ -929,15 +960,18 @@ while True:
 # Enemy land zones
                         if Zones[xZone*yMap+yZone].terrain == "land":
                             if squareZone(30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,Players[1].color,Players[Zones[xZone*yMap+yZone].owner].color,"claim") == 1: # If the zone is clicked
-                                if Players[1].resources >= Zones[xZone*yMap+yZone].cityConquestCost[Zones[xZone*yMap+yZone].city]: # If player has enough resources to conquer city
+                                if Players[1].resources >= Zones[xZone*yMap+yZone].cityConquestCost[Zones[xZone*yMap+yZone].city] and Players[1].resources >= Zones[xZone*yMap+yZone].milbaseConquestCost[Zones[xZone*yMap+yZone].milbase]: # If player has enough resources to conquer the zone
                                     if Zones[xZone*yMap+yZone].isAdjacent(Zones,1,xMap,yMap) == True:
                                         Players[Zones[xZone*yMap+yZone].owner].zones = Players[Zones[xZone*yMap+yZone].owner].zones - 1 # Update enemy player's zone stat
                                         Players[Zones[xZone*yMap+yZone].owner].production = Players[Zones[xZone*yMap+yZone].owner].production - 1 # Update enemy player's production stat
                                         prevCity = Zones[xZone*yMap+yZone].city # Previous level of zone city
+                                        prevMilbase = Zones[xZone*yMap+yZone].milbase # Previous level of zone military base
                                         if Zones[xZone*yMap+yZone].extractor > 0: # If the zone has an extractor
                                             Players[Zones[xZone*yMap+yZone].owner].production = Players[Zones[xZone*yMap+yZone].owner].production - Zones[xZone*yMap+yZone].extractorProductionTot[Zones[xZone*yMap+yZone].extractor] # The enemy loses the production bonus
                                             Zones[xZone*yMap+yZone].extractor = Zones[xZone*yMap+yZone].extractor - 1 # The extractor loses a level
                                             Players[1].production = Players[1].production + Zones[xZone*yMap+yZone].extractorProductionTot[Zones[xZone*yMap+yZone].extractor] # The player gains the production bonus
+                                        elif Zones[xZone*yMap+yZone].milbase > 0: # If the zone has a military base
+                                            Zones[xZone*yMap+yZone].milbase = Zones[xZone*yMap+yZone].milbase - 1 # The military base loses a level
                                         elif Zones[xZone*yMap+yZone].city > 0: # If the zone has a city
                                             Players[Zones[xZone*yMap+yZone].owner].production = Players[Zones[xZone*yMap+yZone].owner].production - Zones[xZone*yMap+yZone].cityProductionTot[Zones[xZone*yMap+yZone].city] # The enemy loses the production bonus
                                             Zones[xZone*yMap+yZone].city = Zones[xZone*yMap+yZone].city - 1 # The city loses a level
@@ -947,7 +981,7 @@ while True:
                                         Zones[xZone*yMap+yZone].owner = 1 # Update the owner of the zone object
                                         Players[1].zones = Players[1].zones + 1 # Update player's zone stat
                                         Players[1].production = Players[1].production + 1 # Update player's zone stat
-                                        Players[1].resources = Players[1].resources - Zones[xZone*yMap+yZone].cityConquestCost[prevCity] # Update player's resource stat
+                                        Players[1].resources = Players[1].resources - Zones[xZone*yMap+yZone].cityConquestCost[prevCity] - Zones[xZone*yMap+yZone].milbaseConquestCost[prevMilbase] + 10 # Update player's resource stat (+10 because city/milbase arrays)
                                     else: print("The zones are not adjacent!")
                                 else: print("You do not have enough resources to claim the zone!")
                                 time.sleep(0.05)
@@ -955,6 +989,10 @@ while True:
                                 if Zones[xZone*yMap+yZone].extractor == 0: extFillColor = white # Color undeveloped extractors white
                                 else: extFillColor = Players[Zones[xZone*yMap+yZone].owner].color # Color upgraded extractors the player's color
                                 extractor(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,extFillColor,Zones[xZone*yMap+yZone]) # Show extractor
+                            if Zones[xZone*yMap+yZone].infrastructure == "milbase":
+                                if Zones[xZone*yMap+yZone].milbase == 0: milbaseFillColor = white # Color undeveloped military bases white
+                                else: milbaseFillColor = Players[Zones[xZone*yMap+yZone].owner].color # Color upgraded military bases the player's color
+                                milbase(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,milbaseFillColor,Zones[xZone*yMap+yZone]) # Show extractor
                             if Zones[xZone*yMap+yZone].infrastructure == "city":
                                 if Zones[xZone*yMap+yZone].city == 0: cityFillColor = white # Color undeveloped cities white
                                 else: cityFillColor = Players[Zones[xZone*yMap+yZone].owner].color # Color upgraded cities the player's color
@@ -995,6 +1033,17 @@ while True:
                                         print("You need "+str(Zones[xZone*yMap+yZone].extractorTechnology[Zones[xZone*yMap+yZone].extractor])+" technology to develop the extractor!")
                                     else: print("You need "+str(Zones[xZone*yMap+yZone].extractorCost[Zones[xZone*yMap+yZone].extractor])+" resources to develop the extractor!")
                                     time.sleep(0.05)
+                            if Zones[xZone*yMap+yZone].infrastructure == "milbase":
+                                if Zones[xZone*yMap+yZone].milbase == 0: milbaseFillColor = white # Color undeveloped military bases white
+                                else: milbaseFillColor = Players[1].color # Color upgraded military bases the player's color
+                                if milbase(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,milbaseFillColor,Zones[xZone*yMap+yZone],"claim") == 1: # If the military base is clicked
+                                    if Players[1].resources >= Zones[xZone*yMap+yZone].milbaseCost[Zones[xZone*yMap+yZone].milbase] and Players[1].technology >= Zones[xZone*yMap+yZone].milbaseTechnology[Zones[xZone*yMap+yZone].milbase]: # If the player can afford to upgrade the military base
+                                        Players[1].resources = Players[1].resources - Zones[xZone*yMap+yZone].milbaseCost[Zones[xZone*yMap+yZone].milbase] # Pay the cost of upgrading
+                                        Zones[xZone*yMap+yZone].milbase = Zones[xZone*yMap+yZone].milbase + 1 # Military base gains a level
+                                    elif Players[1].technology < Zones[xZone*yMap+yZone].milbaseTechnology[Zones[xZone*yMap+yZone].milbase]:
+                                        print("You need "+str(Zones[xZone*yMap+yZone].milbaseTechnology[Zones[xZone*yMap+yZone].milbase])+" technology to develop the military base!")
+                                    else: print("You need "+str(Zones[xZone*yMap+yZone].milbaseCost[Zones[xZone*yMap+yZone].milbase])+" resources to develop the military base!")
+                                    time.sleep(0.05)
                             if Zones[xZone*yMap+yZone].infrastructure == "city":
                                 if Zones[xZone*yMap+yZone].city == 0: cityFillColor = white # Color undeveloped extractors white
                                 else: cityFillColor = Players[1].color # Color upgraded extractors the player's color
@@ -1018,10 +1067,14 @@ while True:
                             if Zones[xZone*yMap+yZone].extractor == 0: extFillColor = white # Color undeveloped extractors white
                             else: extFillColor = Players[Zones[xZone*yMap+yZone].owner].color # Color upgraded extractors the player's color
                             extractor(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,extFillColor,Zones[xZone*yMap+yZone]) # Show extractor
+                        if Zones[xZone*yMap+yZone].infrastructure == "milbase":
+                            if Zones[xZone*yMap+yZone].milbase == 0: milbaseFillColor = white # Color undeveloped military bases white
+                            else: milbaseFillColor = Players[Zones[xZone*yMap+yZone].owner].color # Color upgraded military bases the player's color
+                            milbase(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,milbaseFillColor,Zones[xZone*yMap+yZone]) # Show military base
                         if Zones[xZone*yMap+yZone].infrastructure == "city":
                             if Zones[xZone*yMap+yZone].city == 0: cityFillColor = white # Color undeveloped cities white
                             else: cityFillColor = Players[Zones[xZone*yMap+yZone].owner].color # Color upgraded cities the player's color
-                            city(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,cityFillColor,Zones[xZone*yMap+yZone]) # Show extractor
+                            city(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,cityFillColor,Zones[xZone*yMap+yZone]) # Show city
                     elif Zones[xZone*yMap+yZone].terrain == "water":
                         squareZone(30+xZone*zoneSize,30+yZone*zoneSize,zoneSize,zoneSize,gray,Players[1].color,black)
                         seabase(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,Players[Zones[xZone*yMap+yZone].owner].color)
@@ -1071,20 +1124,27 @@ while True:
                                 Players[Turn].resources = Players[Turn].resources - pickedZone.extractorCost[pickedZone.extractor] # Pay the cost of upgrading
                                 pickedZone.extractor = pickedZone.extractor + 1 # Extractor gains a level
                                 Players[Turn].production = Players[Turn].production + pickedZone.extractorProduction[pickedZone.extractor] # The player gains the production bonus
+                        if pickedZone.infrastructure == "milbase":
+                            if Players[Turn].resources >= pickedZone.milbaseCost[pickedZone.milbase] and Players[Turn].technology >= pickedZone.milbaseTechnology[pickedZone.milbase]: # If the player can upgrade the military base
+                                Players[Turn].resources = Players[Turn].resources - pickedZone.milbaseCost[pickedZone.milbase] # Pay the cost of upgrading
+                                pickedZone.milbase = pickedZone.milbase + 1 # Military base gains a level
                         elif pickedZone.infrastructure == "city":
                             if Players[Turn].resources >= pickedZone.cityCost[pickedZone.city] and Players[Turn].technology >= pickedZone.cityTechnology[pickedZone.city]: # If the player can upgrade the city
                                 Players[Turn].resources = Players[Turn].resources - pickedZone.cityCost[pickedZone.city] # Pay the cost of upgrading
                                 pickedZone.city = pickedZone.city + 1 # City gains a level
                                 Players[Turn].production = Players[Turn].production + pickedZone.cityProduction[pickedZone.city] # The player gains the production bonus
 # AI: Enemy zones
-                    elif pickedZone.owner != Turn and Players[Turn].resources >= pickedZone.cityConquestCost[pickedZone.city] and pickedZone.isAdjacent(Zones,Turn,xMap,yMap) == True: # If the zone is owned by another player than this AI
+                    elif pickedZone.owner != Turn and Players[Turn].resources >= pickedZone.cityConquestCost[pickedZone.city] and Players[Turn].resources >= pickedZone.milbaseConquestCost[pickedZone.milbase] and pickedZone.isAdjacent(Zones,Turn,xMap,yMap) == True: # If the zone is owned by another player than this AI
                         prevCity = pickedZone.city # Previous level of zone city
+                        prevMilbase = pickedZone.milbase # Previous level of military base
                         Players[pickedZone.owner].zones = Players[pickedZone.owner].zones - 1 # Update other player's zone stat
                         Players[pickedZone.owner].production = Players[pickedZone.owner].production - 1 # Update other player's production stat
                         if pickedZone.extractor > 0: # If the zone has an extractor
                             Players[pickedZone.owner].production = Players[pickedZone.owner].production - pickedZone.extractorProductionTot[pickedZone.extractor] # The enemy loses the production bonus
                             pickedZone.extractor = pickedZone.extractor - 1 # The extractor loses a level
                             Players[Turn].production = Players[Turn].production + pickedZone.extractorProductionTot[pickedZone.extractor] # The player gains the production bonus
+                        elif pickedZone.milbase > 0: # If the zone has a military base
+                            pickedZone.milbase = pickedZone.milbase - 1 # The military base loses a level
                         elif pickedZone.city > 0: # If the zone has a city
                             Players[pickedZone.owner].production = Players[pickedZone.owner].production - pickedZone.cityProductionTot[pickedZone.city] # The enemy loses the production bonus
                             pickedZone.city = pickedZone.city - 1 # The city loses a level
@@ -1094,7 +1154,7 @@ while True:
                         pickedZone.owner = Turn # Change ownership of the zone
                         Players[Turn].zones = Players[Turn].zones + 1 # Update player's zone stat
                         Players[Turn].production = Players[Turn].production + 1 # Update player's production stat
-                        Players[Turn].resources = Players[Turn].resources - pickedZone.cityConquestCost[prevCity] # Update player's resource stat
+                        Players[Turn].resources = Players[Turn].resources - pickedZone.cityConquestCost[prevCity] - pickedZone.milbaseConquestCost[prevMilbase] + 10 # Update player's resource stat (10 added because city/milbase arrays)
                     nUnclaimedZones = len([t.owner for t in Zones if t.owner == 0]) # Number of unclaimed zones
 # AI: Late game/full map
                 attempt = 0
@@ -1110,18 +1170,26 @@ while True:
                                 Players[Turn].resources = Players[Turn].resources - pickedZone.extractorCost[pickedZone.extractor] # Pay the cost of upgrading
                                 pickedZone.extractor = pickedZone.extractor + 1 # Extractor gains a level
                                 Players[Turn].production = Players[Turn].production + pickedZone.extractorProduction[pickedZone.extractor] # The player gains the production bonus
+                        if pickedZone.infrastructure == "milbase":
+                            if Players[Turn].resources >= pickedZone.milbaseCost[pickedZone.milbase] and Players[Turn].technology >= pickedZone.milbaseTechnology[pickedZone.milbase]: # If the player can afford to upgrade the military base
+                                Players[Turn].resources = Players[Turn].resources - pickedZone.milbaseCost[pickedZone.milbase] # Pay the cost of upgrading
+                                pickedZone.milbase = pickedZone.milbase + 1 # Military base gains a level
                         elif pickedZone.infrastructure == "city":
                             if Players[Turn].resources >= pickedZone.cityCost[pickedZone.city] and Players[Turn].technology >= pickedZone.cityTechnology[pickedZone.city]: # If the player can afford to upgrade the city
                                 Players[Turn].resources = Players[Turn].resources - pickedZone.cityCost[pickedZone.city] # Pay the cost of upgrading
                                 pickedZone.city = pickedZone.city + 1 # City gains a level
                                 Players[Turn].production = Players[Turn].production + pickedZone.cityProduction[pickedZone.city] # The player gains the production bonus
                     elif pickedZone.owner != 0 and pickedZone.isAdjacent(Zones,Turn,xMap,yMap) == True: # If the zone is not owned by the player and is adjacent
+                        prevCity = pickedZone.city # Previous level of zone city
+                        prevMilbase = pickedZone.milbase # Previous level of military base
                         Players[pickedZone.owner].zones = Players[pickedZone.owner].zones - 1 # Update other player's zone stat
                         Players[pickedZone.owner].production = Players[pickedZone.owner].production - 1 # Update other player's production stat
                         if pickedZone.extractor > 0: # If the zone has an extractor
                             Players[pickedZone.owner].production = Players[pickedZone.owner].production - pickedZone.extractorProductionTot[pickedZone.extractor] # The enemy loses the production bonus
                             pickedZone.extractor = pickedZone.extractor - 1 # The extractor loses a level
                             Players[Turn].production = Players[Turn].production + pickedZone.extractorProductionTot[pickedZone.extractor] # The player gains the production bonus
+                        elif pickedZone.milbase > 0: # If the zone has a military base
+                            pickedZone.milbase = pickedZone.milbase - 1 # The military base loses a level
                         elif pickedZone.city > 0: # If the zone has a city
                             Players[pickedZone.owner].production = Players[pickedZone.owner].production - pickedZone.cityProductionTot[pickedZone.city] # The enemy loses the production bonus
                             pickedZone.city = pickedZone.city - 1 # The city loses a level
@@ -1131,7 +1199,7 @@ while True:
                         pickedZone.owner = Turn # Change ownership of the zone
                         Players[Turn].zones = Players[Turn].zones + 1 # Update player's zone stat
                         Players[Turn].production = Players[Turn].production + 1 # Update player's production stat
-                        Players[Turn].resources = Players[Turn].resources - 10 # Update player's resource stat
+                        Players[Turn].resources = Players[Turn].resources - pickedZone.cityConquestCost[prevCity] - pickedZone.milbaseConquestCost[prevMilbase] + 10 # Update player's resource stat (10 added because city/milbase arrays)
 # End of turn: Render map
                 for xZone in range(0,xMap): # Make zone "buttons"
                     for yZone in range(0,yMap):
@@ -1141,6 +1209,10 @@ while True:
                                 if Zones[xZone*yMap+yZone].extractor == 0: extFillColor = white # Color undeveloped extractors white
                                 else: extFillColor = Players[Zones[xZone*yMap+yZone].owner].color # Color upgraded extractors the player's color
                                 extractor(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,extFillColor,Zones[xZone*yMap+yZone])
+                            if Zones[xZone*yMap+yZone].infrastructure == "milbase":
+                                if Zones[xZone*yMap+yZone].milbase == 0: milbaseFillColor = white # Color undeveloped military bases white
+                                else: milbaseFillColor = Players[Zones[xZone*yMap+yZone].owner].color # Color upgraded military bases the player's color
+                                milbase(30+xZone*zoneSize+0.5*(zoneSize-infraSize),30+yZone*zoneSize+0.5*(zoneSize-infraSize),infraSize,infraSize,Players[1].color,milbaseFillColor,Zones[xZone*yMap+yZone])
                             if Zones[xZone*yMap+yZone].infrastructure == "city":
                                 if Zones[xZone*yMap+yZone].city == 0: cityFillColor = white # Color undeveloped cities white
                                 else: cityFillColor = Players[Zones[xZone*yMap+yZone].owner].color # Color upgraded extractors the player's color
